@@ -106,7 +106,7 @@ html, body {
 .status-box {
   background:var(--vbg); border:1px solid var(--border); border-radius:var(--r);
   padding:7px 10px; font-family:var(--mono); font-size:.74rem;
-  color:var(--sub); line-height:1.7; min-height:44px;
+  color:var(--sub); line-height:1.7; min-height:32px;
 }
 
 /* Readings grid */
@@ -515,8 +515,7 @@ function updStatus(ts) {
     timeStr = lt + ' LT | ' + utcH + ':' + utcM + ' Z';
   }
   document.getElementById('sbox').innerHTML =
-    'Data Timestamp: <b style="color:#267a26;font-size:.95rem;">' + timeStr + '</b><br>' +
-    'Station: <b style="color:' + (selStn === 'S06' ? '#1a5fb4' : '#5a6370') + '">' + selStn + '</b>';
+    'Data Timestamp: <b style="color:#267a26;font-size:.95rem;">' + timeStr + '</b>';
 }
 
 // ── DATE ──────────────────────────────────────────────────────────
@@ -692,9 +691,7 @@ function tryAWC(box, debugLines, tgftpRaw) {
 
 function renderMetarRows(box, raws) {
   box.innerHTML = raws.filter(Boolean).map(function(raw) {
-    var type = raw.startsWith('SPECI') ? 'SPECI' : 'METAR';
-    var cls  = type === 'SPECI' ? 'metar-type speci' : 'metar-type';
-    return '<div class="metar-row"><span class="' + cls + '">' + type + '</span>' + escHtml(raw) + '</div>';
+    return '<div class="metar-row">' + escHtml(raw) + '</div>';
   }).join('');
 }
 
