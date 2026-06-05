@@ -334,7 +334,7 @@
           <label class="qnh-lbl" for="qnh-db" style="display:flex;align-items:center;gap:5px;">
             <span>Dry Bulb</span>
             <label class="qnh-chk-wrap" title="Use Dry Bulb from AWS dashboard">
-              <input type="checkbox" id="chkUseDryBulb" onchange="toggleDryBulbLock()">
+              <input type="checkbox" id="chkUseDryBulb" checked onchange="toggleDryBulbLock()">
               <span>Use AWS</span>
             </label>
           </label>
@@ -365,7 +365,7 @@
 </div><!-- /.app -->
 
 <!-- ── FOOTNOTE ── -->
-<div class="footnote">written by Hazman Mohani</div>
+<div class="footnote" style="font-size:.8rem;">written by Hazman Mohani (Meteorological Supervisor)</div>
 
 <script>
 // ── STATIONS ──────────────────────────────────────────────────────
@@ -400,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildSel();
   tickDate();
   setInterval(tickDate, 15000);
+  toggleDryBulbLock();
   fetchAll();
   startCD();
 });
@@ -540,16 +541,21 @@ async function fetchMetar() {
   if (data && data.length > 0) {
     const raws = data.sort((a, b) => b.obsTime - a.obsTime).slice(0, 3).map(r => r.rawOb || '');
     renderMetarRows(box, raws);
+    // All good — clear any debug line
+    setMetarDebug(box, null);
   } else if (!tgftpRaw) {
     box.innerHTML = '<div class="metar-row metar-nodata">No Data — open file via http:// for full access</div>';
+    setMetarDebug(box, debugLines);
+  } else {
+    // Only tgftp result, no multi-report — suppress debug
+    setMetarDebug(box, null);
   }
-
-  setMetarDebug(box, debugLines);
 }
 
 function setMetarDebug(box, lines) {
   const old = box.querySelector('.metar-debug');
   if (old) old.remove();
+  if (!lines) return;
   const d = document.createElement('div');
   d.className = 'metar-debug';
   d.style.cssText = 'padding:4px 11px;font-size:.6rem;color:#aaa;font-family:monospace;border-top:1px solid #eee;line-height:1.5;word-break:break-all;';
@@ -649,11 +655,16 @@ function calcDP(T, RH) {
 
 // ── STATUS BOX ────────────────────────────────────────────────────
 function updStatus(ts) {
-  const obsT = ts
-    ? new Date(ts).toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, timeZone:'Asia/Singapore' })
-    : '—';
+  let timeStr = '—';
+  if (ts) {
+    const d = new Date(ts);
+    const lt = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' });
+    const utcH = String(d.getUTCHours()).padStart(2,'0');
+    const utcM = String(d.getUTCMinutes()).padStart(2,'0');
+    timeStr = lt + ' LT | ' + utcH + ':' + utcM + ' Z';
+  }
   document.getElementById('sbox').innerHTML =
-    'Data Timestamp: <b style="color:#267a26;font-size:.95rem;">' + obsT + '</b><br>' +
+    'Data Timestamp: <b style="color:#267a26;font-size:.95rem;">' + timeStr + '</b><br>' +
     'Station: <b style="color:#1a5fb4">' + selStn + '</b>';
 }
 
