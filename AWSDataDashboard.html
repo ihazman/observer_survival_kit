@@ -5,257 +5,222 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AWS Dashboard for PLMO Weather Observers</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Nunito:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
 
-  :root {
-    --bg:      #eef0f4;
-    --surface: #ffffff;
-    --border:  #c8cdd6;
-    --border2: #aab2bf;
-    --text:    #1a1e26;
-    --sub:     #5a6370;
-    --accent:  #1a5fb4;
-    --accent2: #0f3e8a;
-    --green:   #267a26;
-    --vbg:     #f7f9fb;
-    --mono:    'Share Tech Mono', monospace;
-    --sans:    'Segoe UI', 'Nunito', 'Barlow', sans-serif;
-    --cond:    'Segoe UI', 'Nunito', 'Barlow Condensed', sans-serif;
-    --r:       5px;
-  }
+:root {
+  --bg:      #eef0f4;
+  --surface: #ffffff;
+  --border:  #c8cdd6;
+  --border2: #aab2bf;
+  --text:    #1a1e26;
+  --sub:     #5a6370;
+  --accent:  #1a5fb4;
+  --accent2: #0f3e8a;
+  --green:   #267a26;
+  --vbg:     #f7f9fb;
+  --mono:    'Verdana', 'Nunito', 'Segoe UI', sans-serif;
+  --sans:    'Verdana', 'Nunito', 'Segoe UI', sans-serif;
+  --r:       5px;
+}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* iOS tap fix — prevents 300ms delay and ensures taps register */
-  button, input, select, label {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
-  }
-  button { cursor: pointer; min-height: 44px; }
-  html, body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    min-height: 100dvh;
-    -webkit-tap-highlight-color: transparent;
-  }
+button, input, select, label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.08);
+  font-family: var(--sans);
+}
+input, select, textarea { font-family: var(--sans); }
+button { cursor: pointer; }
 
-  .app {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 10px 10px 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  min-height: 100dvh;
+}
 
-  /* ── CARD ── */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 10px 10px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-  /* ── TITLE BAR ── */
-  .titlebar {
-    background: var(--accent); color: #fff;
-    padding: 7px 12px;
-    font-family: var(--cond); font-size: .87rem; font-weight: 600; letter-spacing: .05em;
-    display: flex; align-items: center; gap: 7px;
-  }
-  .t-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #8ecfff;
-    flex-shrink: 0;
-    animation: pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+/* Card */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
 
-  /* ── STATION ROW ── */
-  .row-top { display: flex; align-items: center; gap: 7px; padding: 8px 10px; }
-  .sel-wrap { flex: 1; position: relative; }
-  #stationSel {
-    width: 100%;
-    background: var(--vbg); border: 1px solid var(--border2); border-radius: var(--r);
-    color: var(--text); padding: 6px 26px 6px 8px;
-    font-family: var(--sans); font-size: .82rem; font-weight: 500;
-    appearance: none; -webkit-appearance: none; cursor: pointer;
-  }
-  #stationSel:focus { outline: none; border-color: var(--accent); }
-  .sel-wrap::after { content:'▾'; position:absolute; right:8px; top:50%; transform:translateY(-50%); color:var(--sub); pointer-events:none; font-size:.75rem; }
+/* Title bar */
+.titlebar {
+  background: var(--accent); color: #fff;
+  padding: 7px 12px;
+  font-family: var(--sans); font-size: .87rem; font-weight: 700; letter-spacing: .04em;
+  display: flex; align-items: center; gap: 7px;
+}
+.t-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #8ecfff; flex-shrink: 0;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-  #btnFetch {
-    background: var(--accent); color: #fff;
-    border: none; border-radius: var(--r);
-    padding: 7px 15px;
-    font-family: var(--cond); font-size: .9rem; font-weight: 600; letter-spacing: .05em;
-    cursor: pointer; display: flex; align-items: center; gap: 5px;
-    transition: background .15s; white-space: nowrap;
-  }
-  #btnFetch:active { background: var(--accent2); }
-  #btnFetch.spinning svg { animation: spin .7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* Station row */
+.row-top { display:flex; align-items:center; gap:7px; padding:8px 10px; }
+.sel-wrap { flex:1; position:relative; }
+#stationSel {
+  width:100%; background:var(--vbg); border:1px solid var(--border2); border-radius:var(--r);
+  color:var(--text); padding:6px 26px 6px 8px;
+  font-family:var(--sans); font-size:.82rem; font-weight:500;
+  appearance:none; -webkit-appearance:none; cursor:pointer;
+}
+#stationSel:focus { outline:none; border-color:var(--accent); }
+.sel-wrap::after { content:'▾'; position:absolute; right:8px; top:50%; transform:translateY(-50%); color:var(--sub); pointer-events:none; font-size:.75rem; }
 
-  .cycle-box {
-    font-family: var(--mono); font-size: .7rem; color: var(--sub);
-    text-align: right; line-height: 1.35; min-width: 68px;
-  }
-  .cycle-box span { display:block; font-size:.9rem; color:var(--accent); font-weight:700; }
+#btnFetch {
+  background:var(--accent); color:#fff;
+  border:none; border-radius:var(--r);
+  padding:7px 15px; min-height:36px;
+  font-family:var(--sans); font-size:.9rem; font-weight:700;
+  display:flex; align-items:center; gap:5px;
+  transition:background .15s; white-space:nowrap;
+}
+#btnFetch:active { background:var(--accent2); }
+#btnFetch.spinning svg { animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
 
-  /* ── DATE + AUTO ROW ── */
-  .row-sub {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 5px 10px 8px; border-top: 1px solid var(--border); gap: 8px;
-  }
-  .date-str { font-family: var(--mono); font-size: .72rem; color: var(--sub); }
-  .auto-lbl {
-    display: flex; align-items: center; gap: 5px;
-    font-family: var(--mono); font-size: .72rem; color: var(--sub);
-    cursor: pointer; white-space: nowrap;
-  }
-  .auto-lbl input[type=checkbox] { accent-color: var(--accent); width:14px; height:14px; cursor:pointer; }
+.cycle-box { font-family:var(--mono); font-size:.7rem; color:var(--sub); text-align:right; line-height:1.35; min-width:68px; }
+.cycle-box span { display:block; font-size:.9rem; color:var(--accent); font-weight:700; }
 
-  /* ── STATUS BOX ── */
-  .status-box {
-    background: var(--vbg); border: 1px solid var(--border); border-radius: var(--r);
-    padding: 7px 10px; font-family: var(--mono); font-size: .74rem;
-    color: var(--sub); line-height: 1.65; min-height: 44px;
-  }
+/* Date + auto row */
+.row-sub {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:5px 10px 8px; border-top:1px solid var(--border); gap:8px;
+}
+.date-str { font-family:var(--mono); font-size:.72rem; color:var(--sub); }
+.auto-lbl { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:.72rem; color:var(--sub); cursor:pointer; white-space:nowrap; }
+.auto-lbl input[type=checkbox] { accent-color:var(--accent); width:14px; height:14px; cursor:pointer; }
 
-  /* ── READINGS GRID ── */
-  .rgrid { display: grid; gap: 0; }
-  .rgrid.r4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .rgrid.r3 { grid-template-columns: 1fr 1fr 2fr; border-top: 1px solid var(--border); }
+/* Status box */
+.status-box {
+  background:var(--vbg); border:1px solid var(--border); border-radius:var(--r);
+  padding:7px 10px; font-family:var(--mono); font-size:.74rem;
+  color:var(--sub); line-height:1.7; min-height:44px;
+}
 
-  .cell { padding: 8px 9px 10px; border-right: 1px solid var(--border); }
-  .cell:last-child { border-right: none; }
+/* Readings grid */
+.rgrid { display:grid; gap:0; }
+.rgrid.r4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+.rgrid.r3 { grid-template-columns:1fr 1fr 2fr; border-top:1px solid var(--border); }
+.cell { padding:8px 9px 10px; border-right:1px solid var(--border); }
+.cell:last-child { border-right:none; }
+.cell-lbl { font-size:.7rem; color:var(--sub); font-weight:500; margin-bottom:4px; white-space:nowrap; line-height:1.2; }
+.cell-lbl .ctag { font-size:.6rem; color:#999; font-style:italic; }
+.val-box { background:var(--vbg); border:1.5px solid var(--border2); border-radius:3px; padding:5px 7px; min-height:38px; display:flex; align-items:center; }
+.val-box.hi { border-color:var(--accent); background:#e8f1ff; }
+.val-box.calc-box { border-style:dashed; background:#f4f6fa; }
+.val { font-family:var(--mono); font-size:1.42rem; color:var(--text); letter-spacing:.02em; line-height:1; }
+.val.bold { font-weight:700; }
+.val.ld { color:#bbb; font-size:1rem; animation:pulse 1s ease-in-out infinite; }
+.val.na { color:#ccc; font-size:.9rem; }
 
-  .cell-lbl { font-size: .7rem; color: var(--sub); font-weight: 500; margin-bottom: 4px; white-space: nowrap; line-height: 1.2; }
-  .cell-lbl .ctag { font-size: .6rem; color: #999; font-style: italic; }
+/* METAR / QNH shared header */
+.panel-header {
+  color:#fff; padding:6px 12px;
+  font-family:var(--sans); font-size:.82rem; font-weight:700; letter-spacing:.04em;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.panel-badge { font-family:var(--mono); font-size:.8rem; background:rgba(255,255,255,.18); padding:1px 7px; border-radius:3px; letter-spacing:.1em; }
 
-  .val-box {
-    background: var(--vbg); border: 1.5px solid var(--border2); border-radius: 3px;
-    padding: 5px 7px; min-height: 38px; display: flex; align-items: center;
-  }
-  .val-box.hi    { border-color: var(--accent); background: #e8f1ff; }
-  .val-box.calc-box { border-style: dashed; background: #f4f6fa; }
+/* METAR */
+#metarBox { padding:6px 0 4px; }
+.metar-row { padding:6px 11px 7px; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:.75rem; color:var(--text); line-height:1.55; word-break:break-all; }
+.metar-row:last-child { border-bottom:none; }
+.metar-type { display:inline-block; font-size:.6rem; font-weight:700; letter-spacing:.08em; padding:1px 5px; border-radius:3px; margin-right:4px; vertical-align:middle; background:var(--accent); color:#fff; }
+.metar-type.speci { background:#b35c00; }
+.metar-placeholder { color:var(--sub); font-style:italic; font-size:.74rem; }
+.metar-nodata { color:var(--sub); font-style:italic; }
 
-  .val { font-family: var(--mono); font-size: 1.42rem; color: var(--text); letter-spacing: .02em; line-height: 1; }
-  .val.ld { color: #bbb; font-size: 1rem; animation: pulse 1s ease-in-out infinite; }
-  .val.na { color: #ccc; font-size: .9rem; }
+/* QNH panel */
+.qnh-body { padding:10px 10px 12px; display:flex; flex-direction:column; gap:8px; }
+.qnh-row  { display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; }
+.qnh-field { display:flex; flex-direction:column; gap:3px; flex:1; min-width:80px; }
+.qnh-lbl { font-size:.7rem; color:var(--sub); font-weight:500; white-space:nowrap; font-family:var(--sans); }
+.qnh-input {
+  background:var(--vbg); border:1.5px solid var(--border2); border-radius:3px;
+  padding:5px 7px; font-family:var(--mono); font-size:1.1rem; color:var(--text);
+  width:100%; min-height:36px;
+}
+.qnh-input:focus { outline:none; border-color:var(--accent); }
+.qnh-input[readonly] { background:#f0f0f0; border-color:#000; color:#000; font-weight:600; cursor:not-allowed; }
+.qnh-result-box { border-color:#000; background:#f0f0f0; font-size:1.42rem; font-weight:700; color:#000; }
+.qnh-btn {
+  background:var(--surface); border:1.5px solid #000; border-radius:3px; color:#000;
+  padding:6px 14px; font-family:var(--sans); font-size:.88rem; font-weight:700; letter-spacing:.04em;
+  white-space:nowrap; min-height:36px; align-self:flex-end; transition:background .15s, color .15s;
+}
+.qnh-btn:active { background:#000; color:#fff; }
+.qnh-btn-clear { border-color:var(--border2); color:var(--sub); }
+.qnh-btn-clear:active { background:var(--border2); color:#fff; }
+.qnh-chk-wrap {
+  display:inline-flex; align-items:center; gap:3px;
+  font-size:.62rem; color:var(--accent); cursor:pointer;
+  font-family:var(--sans); font-weight:700;
+  border:1px solid var(--accent); border-radius:3px; padding:1px 5px; line-height:1.4; white-space:nowrap;
+}
+.qnh-chk-wrap input[type=checkbox] { accent-color:var(--accent); width:11px; height:11px; cursor:pointer; }
 
-  /* ── METAR PANEL ── */
-  .metar-header {
-    background: var(--accent); color: #fff;
-    padding: 6px 12px; font-family: var(--cond); font-size: .82rem;
-    font-weight: 600; letter-spacing: .06em;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .metar-icao {
-    font-family: var(--mono); font-size: .8rem;
-    background: rgba(255,255,255,.18); padding: 1px 7px;
-    border-radius: 3px; letter-spacing: .1em;
-  }
-  #metarBox { padding: 6px 0 4px; }
-  .metar-row {
-    padding: 6px 11px 7px; border-bottom: 1px solid var(--border);
-    font-family: var(--mono); font-size: .75rem; color: var(--text);
-    line-height: 1.55; word-break: break-all;
-  }
-  .metar-row:last-child { border-bottom: none; }
-  .metar-type {
-    display: inline-block; font-size: .6rem; font-weight: 700;
-    letter-spacing: .08em; padding: 1px 5px; border-radius: 3px;
-    margin-right: 4px; vertical-align: middle;
-    background: var(--accent); color: #fff;
-  }
-  .metar-type.speci { background: #b35c00; }
-  .metar-placeholder { color: var(--sub); font-style: italic; font-size: .74rem; }
-  .metar-nodata      { color: var(--sub); font-style: italic; }
+/* Keep Screen Awake bar */
+.awake-bar {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 6px 14px 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.awake-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--sans);
+  font-size: .72rem;
+  color: var(--sub);
+  cursor: pointer;
+}
+.awake-lbl input[type=checkbox] {
+  accent-color: var(--accent);
+  width: 13px; height: 13px;
+  cursor: pointer;
+}
+.awake-status {
+  font-family: var(--mono);
+  font-size: .65rem;
+  padding: 1px 7px;
+  border-radius: 3px;
+  display: none;
+}
+.awake-status.on  { display:inline; background:#e8f1ff; color:var(--accent);  border:1px solid var(--accent)44; }
+.awake-status.off { display:inline; background:#f4f6fa; color:var(--sub);     border:1px solid var(--border); }
+.awake-status.no  { display:inline; background:#fff3e0; color:#b35c00;        border:1px solid #b35c0044; }
 
-  /* ── FOOTNOTE ── */
-  .footnote {
-    text-align: center;
-    padding: 10px 0 18px;
-    font-family: var(--mono);
-    font-size: .65rem;
-    color: #aaa;
-    letter-spacing: .04em;
-  }
-
-  /* ── QNH PANEL ── */
-  .qnh-body { padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-  .qnh-row  { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
-  .qnh-row-bot { gap: 8px; }
-  .qnh-field { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 80px; }
-  .qnh-lbl {
-    font-size: .7rem; color: var(--sub); font-weight: 500;
-    white-space: nowrap; font-family: var(--sans);
-  }
-  .qnh-input {
-    background: var(--vbg);
-    border: 1.5px solid var(--border2);
-    border-radius: 3px;
-    padding: 5px 7px;
-    font-family: var(--mono);
-    font-size: 1.1rem;
-    color: var(--text);
-    width: 100%;
-    min-height: 36px;
-  }
-  .qnh-input:focus { outline: none; border-color: var(--accent); }
-  .qnh-result-box {
-    border-color: var(--accent);
-    background: #e8f1ff;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--accent2);
-  }
-  .qnh-btn {
-    background: var(--surface);
-    border: 1.5px solid var(--accent);
-    border-radius: 3px;
-    color: var(--accent);
-    padding: 6px 14px;
-    font-family: var(--cond);
-    font-size: .88rem;
-    font-weight: 600;
-    letter-spacing: .04em;
-    cursor: pointer;
-    white-space: nowrap;
-    min-height: 36px;
-    align-self: flex-end;
-    transition: background .15s, color .15s;
-  }
-  .qnh-btn:active { background: var(--accent); color: #fff; }
-  .qnh-chk-wrap {
-    display: inline-flex; align-items: center; gap: 3px;
-    font-size: .62rem; color: var(--accent); cursor: pointer;
-    font-family: var(--sans); font-weight: 600; letter-spacing: .03em;
-    border: 1px solid var(--accent); border-radius: 3px;
-    padding: 1px 5px; line-height: 1.4; white-space: nowrap;
-  }
-  .qnh-chk-wrap input[type=checkbox] { accent-color: var(--accent); width:11px; height:11px; cursor:pointer; }
-  .qnh-input.locked {
-    background: #eaf2ff; border-color: var(--accent);
-    color: var(--accent2); font-weight: 600; cursor: not-allowed;
-  }
-
+/* Footnote */
+.footnote { text-align:center; padding:10px 0 18px; font-family:var(--sans); font-size:.8rem; color:#aaa; letter-spacing:.02em; }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- ── HEADER CARD ── -->
+  <!-- HEADER -->
   <div class="card">
-    <div class="titlebar">
-      <div class="t-dot"></div>AWS Dashboard for PLMO Weather Observers
-    </div>
+    <div class="titlebar"><div class="t-dot"></div>AWS Dashboard for PLMO Weather Observers</div>
     <div class="row-top">
       <div class="sel-wrap">
         <select id="stationSel" onchange="onStation()"></select>
       </div>
       <button id="btnFetch" onclick="fetchAll()">
-        <svg id="ri" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-        </svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         Fetch
       </button>
       <div class="cycle-box">Cycle(s):<span id="cyc">0</span></div>
@@ -269,16 +234,15 @@
     </div>
   </div>
 
-  <!-- ── STATUS BOX ── -->
+  <!-- STATUS -->
   <div class="status-box" id="sbox">Waiting for data...</div>
 
-  <!-- ── READINGS CARD ── -->
+  <!-- READINGS -->
   <div class="card">
-    <!-- Row 1: Dry Bulb | RH | Wind Direction | Wind Speed -->
     <div class="rgrid r4">
       <div class="cell">
         <div class="cell-lbl">Dry Bulb</div>
-        <div class="val-box"><div class="val ld" id="v-temp">···</div></div>
+        <div class="val-box"><div class="val ld bold" id="v-temp">···</div></div>
       </div>
       <div class="cell">
         <div class="cell-lbl">RH</div>
@@ -286,14 +250,13 @@
       </div>
       <div class="cell">
         <div class="cell-lbl">Wind Direction</div>
-        <div class="val-box hi"><div class="val ld" id="v-wdir">···</div></div>
+        <div class="val-box"><div class="val ld bold" id="v-wdir">···</div></div>
       </div>
       <div class="cell">
         <div class="cell-lbl">Wind Speed</div>
-        <div class="val-box"><div class="val ld" id="v-wspd">···</div></div>
+        <div class="val-box"><div class="val ld bold" id="v-wspd">···</div></div>
       </div>
     </div>
-    <!-- Row 2: Wet Bulb | Dew Point | Rainfall (wider) -->
     <div class="rgrid r3">
       <div class="cell">
         <div class="cell-lbl">Wet Bulb <span class="ctag">(Calc)</span></div>
@@ -301,47 +264,45 @@
       </div>
       <div class="cell">
         <div class="cell-lbl">Dew Point <span class="ctag">(Calc)</span></div>
-        <div class="val-box calc-box"><div class="val na" id="v-dp">—</div></div>
+        <div class="val-box calc-box"><div class="val na bold" id="v-dp">—</div></div>
       </div>
       <div class="cell">
-        <div class="cell-lbl" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>Rainfall <span class="ctag">(5-min)</span></span>
-          <button id="btnMute" onclick="toggleMute()" title="Toggle rainfall announcement"
-            style="display:none;">🔊</button>
-        </div>
+        <div class="cell-lbl">Rainfall <span class="ctag">(5-min)</span></div>
         <div class="val-box" id="wrap-rain"><div class="val na" id="v-rain">—</div></div>
+        <button id="btnMute" onclick="toggleMute()" style="display:none;">🔊</button>
       </div>
     </div>
   </div>
 
-  <!-- ── QNH CALCULATION PANEL ── -->
+  <!-- QNH -->
   <div class="card">
-    <div class="metar-header" style="background:#000;">
+    <div class="panel-header" style="background:#000;">
       <span>QNH Calculation (Kew Pattern Barometer)</span>
-      <span class="metar-icao">PLMO</span>
+      <span class="panel-badge">PLMO</span>
     </div>
     <div class="qnh-body">
       <div class="qnh-row">
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-att">Attached Thermometer</label>
-          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off">
+          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="fmtInput(this)">
         </div>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-baro">As Read (xxxx.x)</label>
-          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off">
+          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="fmtInput(this)">
         </div>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-db" style="display:flex;align-items:center;gap:5px;">
             <span>Dry Bulb</span>
-            <label class="qnh-chk-wrap" title="Use Dry Bulb from AWS dashboard">
+            <label class="qnh-chk-wrap">
               <input type="checkbox" id="chkUseDryBulb" checked onchange="toggleDryBulbLock()">
               <span>Use AWS</span>
             </label>
           </label>
-          <input class="qnh-input" id="qnh-db" type="text" inputmode="decimal" placeholder="e.g. 30.0" autocomplete="off">
+          <input class="qnh-input" id="qnh-db" type="text" inputmode="decimal" placeholder="e.g. 30.0" autocomplete="off" readonly>
         </div>
       </div>
-      <div class="qnh-row qnh-row-bot">
+      <div class="qnh-row">
+        <button class="qnh-btn qnh-btn-clear" onclick="clearQNH()">Clear</button>
         <button class="qnh-btn" onclick="calculateQNH()">Calculate QNH</button>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-result">QNH</label>
@@ -351,30 +312,37 @@
     </div>
   </div>
 
-  <!-- ── METAR / SPECI PANEL ── -->
+  <!-- METAR -->
   <div class="card">
-    <div class="metar-header">
+    <div class="panel-header" style="background:var(--accent);">
       <span>Latest 3 reports</span>
-      <span class="metar-icao">WSAP</span>
+      <span class="panel-badge">WSAP</span>
     </div>
     <div id="metarBox">
       <div class="metar-row metar-placeholder">Waiting for data...</div>
     </div>
   </div>
 
-</div><!-- /.app -->
+</div>
 
-<!-- ── FOOTNOTE ── -->
-<div class="footnote" style="font-size:.8rem;">written by Hazman Mohani (Meteorological Supervisor)</div>
+<!-- SCREEN AWAKE -->
+<div class="awake-bar">
+  <label class="awake-lbl" id="awakeLbl">
+    <input type="checkbox" id="chkAwake" onchange="toggleAwake()">
+    <span>Keep Screen Awake</span>
+  </label>
+  <span class="awake-status" id="awakeStatus"></span>
+</div>
+
+<div class="footnote">written by Hazman Mohani (Meteorological Supervisor)</div>
 
 <script>
 // ── STATIONS ──────────────────────────────────────────────────────
 const SM = {
-  'S06': { n: '06 - Paya Lebar Airport', home: true },
+  'S06': { n: '06 - Paya Lebar Airport' },
   'S43': { n: '43 - Kim Chuan Road' },
 };
 
-// ── API ENDPOINTS ─────────────────────────────────────────────────
 const BASE = 'https://api-open.data.gov.sg/v2/real-time/api';
 const EP = {
   temperature: BASE + '/air-temperature',
@@ -385,37 +353,33 @@ const EP = {
 };
 const cache = { temperature:null, humidity:null, windDir:null, windSpeed:null, rainfall:null };
 
-// ── STATE ─────────────────────────────────────────────────────────
 let selStn = 'S06';
 let allStn = {};
 let cycleN = 0;
 let cdTimer = null;
 let cdSec = 60;
 const CD_INT = 60;
-let cycleBytes = 0;   // bytes transferred in last fetch cycle
-let totalBytes = 0;   // accumulated bytes across all cycles
+let lastRainTs = null;
+let speechMuted = false;
 
 // ── INIT ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('load', function() {
   buildSel();
   tickDate();
   setInterval(tickDate, 15000);
-  toggleDryBulbLock();
   fetchAll();
   startCD();
 });
 
 function buildSel() {
-  const s = document.getElementById('stationSel');
-  Object.entries(SM)
-    .sort((a, b) => parseInt(a[0].slice(1)) - parseInt(b[0].slice(1)))
-    .forEach(([id, m]) => {
-      const o = document.createElement('option');
-      o.value = id;
-      o.textContent = m.n || id;
-      if (id === selStn) o.selected = true;
-      s.appendChild(o);
-    });
+  var s = document.getElementById('stationSel');
+  Object.keys(SM).sort(function(a,b){ return parseInt(a.slice(1))-parseInt(b.slice(1)); }).forEach(function(id) {
+    var o = document.createElement('option');
+    o.value = id;
+    o.textContent = SM[id].n;
+    if (id === selStn) o.selected = true;
+    s.appendChild(o);
+  });
 }
 
 function onStation() {
@@ -423,12 +387,12 @@ function onStation() {
   renderAll();
 }
 
-// ── AUTO COUNTDOWN ────────────────────────────────────────────────
+// ── AUTO REFRESH ──────────────────────────────────────────────────
 function startCD() {
   stopCD();
   if (!document.getElementById('autoChk').checked) return;
   cdSec = CD_INT; updCD();
-  cdTimer = setInterval(() => {
+  cdTimer = setInterval(function() {
     cdSec--; updCD();
     if (cdSec <= 0) { fetchAll(); cdSec = CD_INT; }
   }, 1000);
@@ -443,182 +407,65 @@ function updCD() {
     document.getElementById('autoTxt').textContent = 'Auto refresh in ' + cdSec + ' sec';
 }
 
-// ── FETCH ALL ─────────────────────────────────────────────────────
-function getPerfBytes() {
-  // Sum transferSize of all resource entries so far
-  if (!performance || !performance.getEntriesByType) return 0;
-  return performance.getEntriesByType('resource')
-    .reduce((sum, e) => sum + (e.transferSize || 0), 0);
-}
-
-async function fetchAll() {
+// ── FETCH ─────────────────────────────────────────────────────────
+function fetchAll() {
   setLD();
-  const btn = document.getElementById('btnFetch');
+  var btn = document.getElementById('btnFetch');
   btn.classList.add('spinning');
-  const bytesBefore = getPerfBytes();
-  await Promise.allSettled([ fetchWeather(), fetchMetar() ]);
-  const bytesAfter = getPerfBytes();
-  cycleBytes = Math.max(0, bytesAfter - bytesBefore);
-  totalBytes += cycleBytes;
-  cycleN++;
-  document.getElementById('cyc').textContent = cycleN;
-  merge();
-  renderAll();
-  btn.classList.remove('spinning');
-  if (document.getElementById('autoChk').checked) startCD();
-}
 
-async function fetchWeather() {
-  await Promise.allSettled(Object.entries(EP).map(async ([k, u]) => {
-    try {
-      const r = await fetch(u);
-      if (!r.ok) throw 0;
-      cache[k] = await r.json();
-    } catch (e) { console.warn(k, e); }
-  }));
-}
-
-// ── METAR FETCH ───────────────────────────────────────────────────
-const TGFTP_URL   = 'https://tgftp.nws.noaa.gov/data/observations/metar/stations/WSAP.TXT';
-const AWC_URL     = 'https://aviationweather.gov/api/data/metar?ids=WSAP&format=json&hours=6';
-const AWC_PROXIES = [
-  u => 'https://api.cors.lol/?url='            + encodeURIComponent(u),
-  u => 'https://corsproxy.io/?'                + encodeURIComponent(u),
-  u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
-  u => 'https://api.allorigins.win/raw?url='   + encodeURIComponent(u),
-];
-
-function fetchWithTimeout(url, ms) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('timeout')), ms);
-    fetch(url).then(r => { clearTimeout(timer); resolve(r); })
-              .catch(e => { clearTimeout(timer); reject(e); });
+  var promises = Object.keys(EP).map(function(k) {
+    return fetch(EP[k])
+      .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(j) { cache[k] = j; })
+      .catch(function(e) { console.warn(k + ':', e.message); });
   });
-}
 
-async function fetchMetar() {
-  const box = document.getElementById('metarBox');
-  box.innerHTML = '<div class="metar-row metar-placeholder">Fetching reports...</div>';
-
-  let debugLines = [];
-  let tgftpRaw = null;
-
-  // ── Stage 1: tgftp via cors.lol (works from file:// and http://) ──
-  try {
-    const proxied = 'https://api.cors.lol/?url=' + encodeURIComponent(TGFTP_URL);
-    const r = await fetchWithTimeout(proxied, 20000);
-    if (r.ok) {
-      const txt = await r.text();
-      const lines = txt.trim().split('\n').map(l => l.trim()).filter(Boolean);
-      tgftpRaw = lines.find(l => l.includes('WSAP'));
-      debugLines.push(tgftpRaw ? 'tgftp: OK' : 'tgftp: no match');
-    } else {
-      debugLines.push('tgftp: HTTP ' + r.status);
-    }
-  } catch(e) { debugLines.push('tgftp: ' + e.message); }
-
-  if (tgftpRaw) renderMetarRows(box, [tgftpRaw]);
-
-  // ── Stage 2: AWC JSON via proxies for 3 reports ──
-  let data = null;
-  for (const makeUrl of AWC_PROXIES) {
-    const label = makeUrl('X').replace('X','').replace('https://','').split(/[/?]/)[0];
-    try {
-      const r = await fetchWithTimeout(makeUrl(AWC_URL), 20000);
-      if (!r.ok) { debugLines.push(label + ':' + r.status); continue; }
-      const text = await r.text();
-      let json;
-      try { json = JSON.parse(text); } catch { debugLines.push(label + ':parse'); continue; }
-      if (json && typeof json.contents === 'string') {
-        try { json = JSON.parse(json.contents); } catch { continue; }
-      }
-      if (Array.isArray(json) && json.length > 0 && json[0].icaoId) {
-        data = json; debugLines.push(label + ':OK(' + json.length + ')'); break;
-      } else { debugLines.push(label + ':badshape'); }
-    } catch(e) { debugLines.push(label + ':' + e.message.slice(0,12)); }
-  }
-
-  if (data && data.length > 0) {
-    const raws = data.sort((a, b) => b.obsTime - a.obsTime).slice(0, 3).map(r => r.rawOb || '');
-    renderMetarRows(box, raws);
-    // All good — clear any debug line
-    setMetarDebug(box, null);
-  } else if (!tgftpRaw) {
-    box.innerHTML = '<div class="metar-row metar-nodata">No Data — open file via http:// for full access</div>';
-    setMetarDebug(box, debugLines);
-  } else {
-    // Only tgftp result, no multi-report — suppress debug
-    setMetarDebug(box, null);
-  }
-}
-
-function setMetarDebug(box, lines) {
-  const old = box.querySelector('.metar-debug');
-  if (old) old.remove();
-  if (!lines) return;
-  const d = document.createElement('div');
-  d.className = 'metar-debug';
-  d.style.cssText = 'padding:4px 11px;font-size:.6rem;color:#aaa;font-family:monospace;border-top:1px solid #eee;line-height:1.5;word-break:break-all;';
-  d.textContent = lines.join(' | ');
-  box.appendChild(d);
-}
-
-function renderMetarRows(box, raws) {
-  box.innerHTML = raws.filter(Boolean).map(raw => {
-    const type = raw.startsWith('SPECI') ? 'SPECI' : 'METAR';
-    const cls  = type === 'SPECI' ? 'metar-type speci' : 'metar-type';
-    return `<div class="metar-row"><span class="${cls}">${type}</span>${escHtml(raw)}</div>`;
-  }).join('');
-}
-
-function escHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-// ── LOADING STATE ─────────────────────────────────────────────────
-function setLD() {
-  ['v-temp','v-rh','v-wdir','v-wspd'].forEach(id => {
-    const e = document.getElementById(id); e.textContent = '···'; e.className = 'val ld';
+  Promise.all(promises).then(function() {
+    cycleN++;
+    document.getElementById('cyc').textContent = cycleN;
+    merge();
+    renderAll();
+    btn.classList.remove('spinning');
+    if (document.getElementById('autoChk').checked) startCD();
   });
-  ['v-wb','v-dp','v-rain'].forEach(id => {
-    const e = document.getElementById(id); e.textContent = '—'; e.className = 'val na';
-  });
+
+  fetchMetar();
 }
 
-// ── MERGE STATION DATA ────────────────────────────────────────────
+// ── MERGE ─────────────────────────────────────────────────────────
+// v2 API shape: { data: { readings: [{ timestamp, data: [{ stationId, value }] }] } }
 function merge() {
   allStn = {};
-  Object.entries(cache).forEach(([k, d]) => {
-    if (!d) return;
-    const items = d?.data?.readings;
-    if (!items?.length) return;
-    const lat = items[items.length - 1];
-    (lat.data || []).forEach(r => {
-      const id = r.stationId;
-      if (!allStn[id]) allStn[id] = { id };
+  Object.keys(cache).forEach(function(k) {
+    var d = cache[k];
+    if (!d || !d.data || !d.data.readings || !d.data.readings.length) return;
+    var latest = d.data.readings[d.data.readings.length - 1];
+    if (!latest || !latest.data) return;
+    latest.data.forEach(function(r) {
+      var id = r.stationId;
+      if (!allStn[id]) allStn[id] = {};
       allStn[id][k] = r.value;
-      allStn[id][k + '_ts'] = lat.timestamp;
+      allStn[id][k + '_ts'] = latest.timestamp;
     });
   });
 }
 
 // ── RENDER ────────────────────────────────────────────────────────
 function renderAll() {
-  const st = allStn[selStn] || {};
-  const T = st.temperature, RH = st.humidity, WD = st.windDir, WS = st.windSpeed, RF = st.rainfall;
+  var st = allStn[selStn] || {};
+  var T  = st.temperature;
+  var RH = st.humidity;
+  var WD = st.windDir;
+  var WS = st.windSpeed;
+  var RF = st.rainfall;
 
   sv('v-temp', T  !== undefined ? T.toFixed(1) : null);
   sv('v-rh',   RH !== undefined ? Math.round(RH).toString() : null);
-  sv('v-wdir', WD !== undefined ? (Math.round(WD / 10) * 10).toString().padStart(3, '0') : null);
-  sv('v-wspd', WS !== undefined ? Math.round(WS).toString().padStart(2, '0') : null);
+  sv('v-wdir', WD !== undefined ? (Math.round(WD/10)*10).toString().padStart(3,'0') : null);
+  sv('v-wspd', WS !== undefined ? Math.round(WS).toString().padStart(2,'0') : null);
   sv('v-rain', RF !== undefined ? RF.toFixed(1) : null);
 
   if (RF !== undefined) announceRain(RF, st.rainfall_ts);
-
-  // Sync AWS Dry Bulb to QNH panel if checkbox is ticked
-  if (document.getElementById('chkUseDryBulb')?.checked && T !== undefined) {
-    document.getElementById('qnh-db').value = T.toFixed(1);
-  }
 
   if (T !== undefined && RH !== undefined) {
     sv('v-wb', calcWB(T, RH).toFixed(1));
@@ -627,18 +474,59 @@ function renderAll() {
     sv('v-wb', null); sv('v-dp', null);
   }
 
-  const ts = st.temperature_ts || st.humidity_ts || st.windDir_ts;
-  updStatus(ts);
+  // Sync dry bulb to QNH if checkbox ticked
+  var chk = document.getElementById('chkUseDryBulb');
+  if (chk && chk.checked && T !== undefined) {
+    document.getElementById('qnh-db').value = T.toFixed(1);
+  }
+
+  updStatus(st.temperature_ts || st.humidity_ts || st.windDir_ts);
 }
 
+var BOLD_IDS = { 'v-temp':true, 'v-wdir':true, 'v-wspd':true, 'v-dp':true };
+
 function sv(id, val) {
-  const e = document.getElementById(id);
-  if (val !== null && val !== undefined) { e.textContent = val; e.className = 'val'; }
-  else { e.textContent = '—'; e.className = 'val na'; }
+  var e = document.getElementById(id);
+  if (!e) return;
+  var b = BOLD_IDS[id] ? ' bold' : '';
+  if (val !== null && val !== undefined) { e.textContent = val; e.className = 'val' + b; }
+  else { e.textContent = '—'; e.className = 'val na' + b; }
+}
+
+function setLD() {
+  ['v-temp','v-rh','v-wdir','v-wspd'].forEach(function(id) {
+    var e = document.getElementById(id);
+    if (e) { e.textContent = '···'; e.className = 'val ld' + (BOLD_IDS[id] ? ' bold' : ''); }
+  });
+  ['v-wb','v-dp','v-rain'].forEach(function(id) {
+    var e = document.getElementById(id);
+    if (e) { e.textContent = '—'; e.className = 'val na' + (BOLD_IDS[id] ? ' bold' : ''); }
+  });
+}
+
+// ── STATUS ────────────────────────────────────────────────────────
+function updStatus(ts) {
+  var timeStr = '—';
+  if (ts) {
+    var d = new Date(ts);
+    var lt = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' });
+    var utcH = String(d.getUTCHours()).padStart(2,'0');
+    var utcM = String(d.getUTCMinutes()).padStart(2,'0');
+    timeStr = lt + ' LT | ' + utcH + ':' + utcM + ' Z';
+  }
+  document.getElementById('sbox').innerHTML =
+    'Data Timestamp: <b style="color:#267a26;font-size:.95rem;">' + timeStr + '</b><br>' +
+    'Station: <b style="color:' + (selStn === 'S06' ? '#1a5fb4' : '#5a6370') + '">' + selStn + '</b>';
+}
+
+// ── DATE ──────────────────────────────────────────────────────────
+function tickDate() {
+  document.getElementById('dstr').textContent = new Date().toLocaleDateString('en-SG', {
+    weekday:'long', month:'long', day:'numeric', year:'numeric', timeZone:'Asia/Singapore'
+  });
 }
 
 // ── CALCULATED VALUES ─────────────────────────────────────────────
-// Wet Bulb: Stull (2011)
 function calcWB(T, RH) {
   return T * Math.atan(0.151977 * Math.pow(RH + 8.313659, 0.5))
        + Math.atan(T + RH)
@@ -646,125 +534,238 @@ function calcWB(T, RH) {
        + 0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH)
        - 4.686035;
 }
-// Dew Point: Magnus formula
 function calcDP(T, RH) {
-  const a = 17.625, b = 243.04;
-  const al = (a * T) / (b + T) + Math.log(RH / 100);
+  var a = 17.625, b = 243.04;
+  var al = (a * T) / (b + T) + Math.log(RH / 100);
   return (b * al) / (a - al);
 }
 
-// ── STATUS BOX ────────────────────────────────────────────────────
-function updStatus(ts) {
-  let timeStr = '—';
-  if (ts) {
-    const d = new Date(ts);
-    const lt = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' });
-    const utcH = String(d.getUTCHours()).padStart(2,'0');
-    const utcM = String(d.getUTCMinutes()).padStart(2,'0');
-    timeStr = lt + ' LT | ' + utcH + ':' + utcM + ' Z';
-  }
-  document.getElementById('sbox').innerHTML =
-    'Data Timestamp: <b style="color:#267a26;font-size:.95rem;">' + timeStr + '</b><br>' +
-    'Station: <b style="color:#1a5fb4">' + selStn + '</b>';
-}
-
 // ── RAINFALL SPEECH ───────────────────────────────────────────────
-let lastAnnouncedTs = null;
-let speechMuted = false;
-
 function announceRain(rf, ts) {
-  if (speechMuted) return;
-  if (!window.speechSynthesis) return;
-  if (rf <= 0) { lastAnnouncedTs = ts; return; }
-  if (ts && ts === lastAnnouncedTs) return;
-  lastAnnouncedTs = ts;
-
-  const spoken = rf.toFixed(1) + ' m m, of rainfall detected.';
-  const utt = new SpeechSynthesisUtterance(spoken);
-  utt.lang = 'en-SG'; utt.rate = 0.92; utt.pitch = 1.0;
+  if (speechMuted || !window.speechSynthesis) return;
+  if (rf <= 0) { lastRainTs = ts; return; }
+  if (ts && ts === lastRainTs) return;
+  lastRainTs = ts;
+  var utt = new SpeechSynthesisUtterance(rf.toFixed(1) + ' m m, of rainfall detected.');
+  utt.lang = 'en-SG'; utt.rate = 0.92;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utt);
-
-  const box = document.getElementById('wrap-rain');
+  var box = document.getElementById('wrap-rain');
   if (box) {
-    box.style.borderColor = '#1a5fb4';
-    box.style.background  = '#e8f1ff';
-    setTimeout(() => { box.style.borderColor = ''; box.style.background = ''; }, 2500);
+    box.style.borderColor = '#1a5fb4'; box.style.background = '#e8f1ff';
+    setTimeout(function() { box.style.borderColor = ''; box.style.background = ''; }, 2500);
   }
 }
-
 function toggleMute() {
   speechMuted = !speechMuted;
-  const btn = document.getElementById('btnMute');
+  var btn = document.getElementById('btnMute');
   if (btn) btn.textContent = speechMuted ? '🔇' : '🔊';
-  if (speechMuted && window.speechSynthesis) window.speechSynthesis.cancel();
 }
 
-// ── DATE STRING ───────────────────────────────────────────────────
-function tickDate() {
-  document.getElementById('dstr').textContent = new Date().toLocaleDateString('en-SG', {
-    weekday:'long', month:'long', day:'numeric', year:'numeric', timeZone:'Asia/Singapore'
-  });
-}// ── QNH DRY BULB LOCK ────────────────────────────────────────────
+// ── QNH ───────────────────────────────────────────────────────────
+function fmtInput(el) {
+  var v = parseFloat(el.value);
+  if (!isNaN(v)) el.value = v.toFixed(1);
+}
+var QNH_CISTERN_HT       = 35.0;
+var QNH_LATITUDE         = 1.35;
+var QNH_INDEX_CORRECTION = -0.2;
+
 function toggleDryBulbLock() {
-  const chk   = document.getElementById('chkUseDryBulb');
-  const input = document.getElementById('qnh-db');
+  var chk   = document.getElementById('chkUseDryBulb');
+  var input = document.getElementById('qnh-db');
+  if (!chk || !input) return;
   if (chk.checked) {
     input.readOnly = true;
-    input.classList.add('locked');
-    // immediately populate with current AWS value if available
-    const st = allStn[selStn] || {};
+    var st = allStn[selStn] || {};
     if (st.temperature !== undefined) input.value = st.temperature.toFixed(1);
   } else {
     input.readOnly = false;
-    input.classList.remove('locked');
   }
 }
 
-// ── QNH CALCULATION ──────────────────────────────────────────────
-// Constants fixed for PLMO Kew Pattern barometer
-const QNH_CISTERN_HT        = 35.0;   // metres above MSL
-const QNH_LATITUDE          = 1.35;   // degrees
-const QNH_INDEX_CORRECTION  = -0.2;
-
-function altCor(cisternHt) {
-  return 0.0003086 * cisternHt;
-}
-function tempCorrection(attThermo, baroReading) {
-  return ((0.000163 * baroReading) / (1 + 0.0001818 * attThermo) + 0.008) * attThermo;
-}
-function latCorrection(baroReading, lat) {
-  const pi = Math.PI;
-  const G  = 980.665;
-  const lat1 = 2 * lat / 180 * pi;
-  const G1 = 980.616 * (1 - 0.0026373 * Math.cos(lat1) + 0.0000059 * Math.cos(lat1) * Math.cos(lat1));
-  return baroReading * (G1 / G - 1);
-}
-function qnhCorrection(cisternHt, dryBulb, corrCistern) {
-  return corrCistern * Math.pow(1 + 0.0065 * cisternHt / (273.16 + dryBulb), 5.2568) - corrCistern;
+function clearQNH() {
+  document.getElementById('qnh-att').value = '';
+  document.getElementById('qnh-baro').value = '';
+  document.getElementById('qnh-result').value = '';
+  var chk = document.getElementById('chkUseDryBulb');
+  if (!chk || !chk.checked) {
+    document.getElementById('qnh-db').value = '';
+  }
 }
 
 function calculateQNH() {
-  const baro    = parseFloat(document.getElementById('qnh-baro').value);
-  const dryBulb = parseFloat(document.getElementById('qnh-db').value);
-  const attT    = parseFloat(document.getElementById('qnh-att').value);
-  const res     = document.getElementById('qnh-result');
-
-  if (isNaN(baro) || isNaN(dryBulb) || isNaN(attT)) {
-    res.value = 'Input error';
-    return;
-  }
-
-  const altC  = altCor(QNH_CISTERN_HT);
-  const tempC = tempCorrection(attT, baro);
-  const latC  = latCorrection(baro, QNH_LATITUDE);
-  const totC  = QNH_INDEX_CORRECTION + altC - tempC + latC;
-  const corrCistern = baro + totC;
-  const corrQNH = qnhCorrection(QNH_CISTERN_HT, dryBulb, corrCistern);
-  const QNH = corrCistern + corrQNH;
-
-  res.value = QNH.toFixed(1);
+  var baro    = parseFloat(document.getElementById('qnh-baro').value);
+  var dryBulb = parseFloat(document.getElementById('qnh-db').value);
+  var attT    = parseFloat(document.getElementById('qnh-att').value);
+  var res     = document.getElementById('qnh-result');
+  if (isNaN(baro) || isNaN(dryBulb) || isNaN(attT)) { res.value = 'Input error'; return; }
+  var altC      = 0.0003086 * QNH_CISTERN_HT;
+  var tempC     = ((0.000163 * baro) / (1 + 0.0001818 * attT) + 0.008) * attT;
+  var pi        = Math.PI;
+  var lat1      = 2 * QNH_LATITUDE / 180 * pi;
+  var G1        = 980.616 * (1 - 0.0026373 * Math.cos(lat1) + 0.0000059 * Math.cos(lat1) * Math.cos(lat1));
+  var latC      = baro * (G1 / 980.665 - 1);
+  var totC      = QNH_INDEX_CORRECTION + altC - tempC + latC;
+  var corrC     = baro + totC;
+  var corrQNH   = corrC * Math.pow(1 + 0.0065 * QNH_CISTERN_HT / (273.16 + dryBulb), 5.2568) - corrC;
+  res.value     = (corrC + corrQNH).toFixed(1);
 }
+
+// ── METAR ─────────────────────────────────────────────────────────
+var TGFTP_URL = 'https://tgftp.nws.noaa.gov/data/observations/metar/stations/WSAP.TXT';
+var AWC_URL   = 'https://aviationweather.gov/api/data/metar?ids=WSAP&format=json&hours=6';
+var PROXIES   = [
+  function(u) { return 'https://api.cors.lol/?url=' + encodeURIComponent(u); },
+  function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+  function(u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); },
+  function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+];
+
+function fetchWithTimeout(url, ms) {
+  return new Promise(function(resolve, reject) {
+    var timer = setTimeout(function() { reject(new Error('timeout')); }, ms);
+    fetch(url)
+      .then(function(r) { clearTimeout(timer); resolve(r); })
+      .catch(function(e) { clearTimeout(timer); reject(e); });
+  });
+}
+
+function fetchMetar() {
+  var box = document.getElementById('metarBox');
+  box.innerHTML = '<div class="metar-row metar-placeholder">Fetching reports...</div>';
+
+  var debugLines = [];
+  var tgftpRaw   = null;
+
+  // Try tgftp via cors.lol
+  fetchWithTimeout(PROXIES[0](TGFTP_URL), 20000)
+    .then(function(r) {
+      if (!r.ok) { debugLines.push('tgftp:' + r.status); return tryAWC(box, debugLines, null); }
+      return r.text().then(function(txt) {
+        var lines = txt.trim().split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+        tgftpRaw = lines.find(function(l) { return l.includes('WSAP'); }) || null;
+        debugLines.push(tgftpRaw ? 'tgftp:OK' : 'tgftp:nomatch');
+        if (tgftpRaw) renderMetarRows(box, [tgftpRaw]);
+        return tryAWC(box, debugLines, tgftpRaw);
+      });
+    })
+    .catch(function(e) {
+      debugLines.push('tgftp:' + e.message.slice(0,15));
+      tryAWC(box, debugLines, null);
+    });
+}
+
+function tryAWC(box, debugLines, tgftpRaw) {
+  var idx = 0;
+  function next() {
+    if (idx >= PROXIES.length) {
+      if (!tgftpRaw) {
+        box.innerHTML = '<div class="metar-row metar-nodata">No Data</div>';
+        showDebug(box, debugLines);
+      }
+      return;
+    }
+    var makeUrl = PROXIES[idx++];
+    fetchWithTimeout(makeUrl(AWC_URL), 20000)
+      .then(function(r) {
+        if (!r.ok) { debugLines.push('proxy' + idx + ':' + r.status); return next(); }
+        return r.text().then(function(txt) {
+          var json;
+          try { json = JSON.parse(txt); } catch(e) { debugLines.push('proxy' + idx + ':parse'); return next(); }
+          if (json && typeof json.contents === 'string') {
+            try { json = JSON.parse(json.contents); } catch(e) { return next(); }
+          }
+          if (Array.isArray(json) && json.length > 0 && json[0].icaoId) {
+            var raws = json.sort(function(a,b){return b.obsTime-a.obsTime;}).slice(0,3).map(function(r){return r.rawOb||'';});
+            renderMetarRows(box, raws);
+          } else {
+            debugLines.push('proxy' + idx + ':badshape');
+            return next();
+          }
+        });
+      })
+      .catch(function(e) { debugLines.push('proxy' + idx + ':' + e.message.slice(0,12)); next(); });
+  }
+  next();
+}
+
+function renderMetarRows(box, raws) {
+  box.innerHTML = raws.filter(Boolean).map(function(raw) {
+    var type = raw.startsWith('SPECI') ? 'SPECI' : 'METAR';
+    var cls  = type === 'SPECI' ? 'metar-type speci' : 'metar-type';
+    return '<div class="metar-row"><span class="' + cls + '">' + type + '</span>' + escHtml(raw) + '</div>';
+  }).join('');
+}
+
+function showDebug(box, lines) {
+  var d = document.createElement('div');
+  d.style.cssText = 'padding:4px 11px;font-size:.6rem;color:#aaa;font-family:monospace;border-top:1px solid #eee;word-break:break-all;';
+  d.textContent = lines.join(' | ');
+  box.appendChild(d);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── SCREEN AWAKE (Wake Lock API) ──────────────────────────────────
+var wakeLock = null;
+var wakeSupported = ('wakeLock' in navigator);
+
+function toggleAwake() {
+  var chk = document.getElementById('chkAwake');
+  if (chk.checked) {
+    if (!wakeSupported) {
+      alert('Keep Screen Awake is enabled on supported devices only.\n\nSupported: Chrome 84+, Edge 84+, Android Chrome.\nNot supported: Firefox, Safari (iOS/macOS).\n\nThis device/browser does not support Keep Screen Awake.');
+      chk.checked = false;
+      setAwakeStatus('no', 'Not supported on this device');
+      return;
+    }
+    requestWakeLock();
+  } else {
+    releaseWakeLock();
+  }
+}
+
+function requestWakeLock() {
+  navigator.wakeLock.request('screen')
+    .then(function(lock) {
+      wakeLock = lock;
+      setAwakeStatus('on', '✓ Keep Screen Awake ON');
+      wakeLock.addEventListener('release', function() {
+        if (document.getElementById('chkAwake').checked && !document.hidden) {
+          requestWakeLock();
+        } else {
+          setAwakeStatus('off', 'Paused (tab hidden)');
+        }
+      });
+    })
+    .catch(function(e) {
+      setAwakeStatus('no', 'Could not enable: ' + e.message.slice(0, 25));
+      document.getElementById('chkAwake').checked = false;
+    });
+}
+
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+  setAwakeStatus('off', 'Keep Screen Awake OFF');
+}
+
+function setAwakeStatus(cls, msg) {
+  var el = document.getElementById('awakeStatus');
+  if (!el) return;
+  el.className = 'awake-status ' + cls;
+  el.textContent = msg;
+}
+
+// Re-acquire when tab becomes visible again
+document.addEventListener('visibilitychange', function() {
+  var chk = document.getElementById('chkAwake');
+  if (!document.hidden && chk && chk.checked && !wakeLock && wakeSupported) {
+    requestWakeLock();
+  }
+});
 </script>
 </body>
 </html>
