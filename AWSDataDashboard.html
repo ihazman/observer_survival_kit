@@ -208,7 +208,19 @@ html, body {
 .awake-status.off { display:inline; color:var(--sub); }
 .awake-status.no  { display:inline; color:#b35c00; }
 
-/* Footnote */
+#btnCapture {
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--sub);
+  padding: 6px 9px;
+  min-height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s, color .15s;
+  flex-shrink: 0;
+}
+#btnCapture:active { background: var(--accent); border-color: var(--accent); color: #fff; }
+#btnCapture.capturing { opacity: .5; pointer-events: none; }
 .footnote { text-align:center; padding:10px 0 18px; font-family:var(--sans); font-size:.8rem; color:#aaa; letter-spacing:.02em; }
 </style>
 </head>
@@ -225,6 +237,12 @@ html, body {
       <button id="btnFetch" onclick="fetchAll()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         Fetch
+      </button>
+      <button id="btnCapture" onclick="captureScreen()" title="Save screenshot">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
       </button>
       <div class="cycle-box">Cycle(s):<span id="cyc">0</span></div>
     </div>
@@ -794,6 +812,69 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// ── SCREEN CAPTURE ────────────────────────────────────────────────
+function captureScreen() {
+  var btn = document.getElementById('btnCapture');
+  btn.classList.add('capturing');
+
+  // Load html2canvas dynamically if not already loaded
+  if (typeof html2canvas === 'undefined') {
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = function() { doCapture(btn); };
+    script.onerror = function() {
+      btn.classList.remove('capturing');
+      alert('Could not load screenshot library. Please check your internet connection.');
+    };
+    document.head.appendChild(script);
+  } else {
+    doCapture(btn);
+  }
+}
+
+function doCapture(btn) {
+  var target = document.querySelector('.app');
+  html2canvas(target, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: getComputedStyle(document.body).backgroundColor || '#eef0f4',
+    logging: false
+  }).then(function(canvas) {
+    var now = new Date();
+    var sgTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Singapore' }));
+    var yy  = String(sgTime.getFullYear()).slice(2);
+    var MM  = String(sgTime.getMonth() + 1).padStart(2, '0');
+    var dd  = String(sgTime.getDate()).padStart(2, '0');
+    var HH  = String(sgTime.getHours()).padStart(2, '0');
+    var mm  = String(sgTime.getMinutes()).padStart(2, '0');
+    var ss  = String(sgTime.getSeconds()).padStart(2, '0');
+    var filename = yy + MM + dd + '_' + HH + mm + ss + '_AWSDashboard.png';
+
+    canvas.toBlob(function(blob) {
+      // Try Web Share API first (iOS Safari + Android Chrome)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'image/png' })] })) {
+        var file = new File([blob], filename, { type: 'image/png' });
+        navigator.share({ files: [file], title: 'AWS Dashboard' })
+          .catch(function() {})
+          .finally(function() { btn.classList.remove('capturing'); });
+      } else {
+        // Fallback: direct download
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        btn.classList.remove('capturing');
+      }
+    }, 'image/png');
+  }).catch(function(e) {
+    console.warn('Capture failed:', e);
+    btn.classList.remove('capturing');
+    alert('Screenshot failed: ' + e.message);
+  });
+}
+
 // ── SCREEN AWAKE (Wake Lock API) ──────────────────────────────────
 var wakeLock = null;
 var wakeSupported = ('wakeLock' in navigator);
@@ -819,16 +900,21 @@ function requestWakeLock() {
       wakeLock = lock;
       setAwakeStatus('on', 'is ON');
       wakeLock.addEventListener('release', function() {
+        wakeLock = null;
         if (document.getElementById('chkAwake').checked && !document.hidden) {
+          // Tab still visible — device released it (e.g. battery saver), re-acquire
           requestWakeLock();
         } else {
+          // Tab hidden or user unchecked — sync checkbox and status to OFF
+          document.getElementById('chkAwake').checked = false;
           setAwakeStatus('off', 'is OFF');
         }
       });
     })
     .catch(function(e) {
-      setAwakeStatus('no', 'Could not enable: ' + e.message.slice(0, 25));
+      wakeLock = null;
       document.getElementById('chkAwake').checked = false;
+      setAwakeStatus('no', 'Could not enable: ' + e.message.slice(0, 25));
     });
 }
 
@@ -844,11 +930,18 @@ function setAwakeStatus(cls, msg) {
   el.textContent = msg;
 }
 
-// Re-acquire when tab becomes visible again
+// Re-acquire or sync when tab becomes visible again
 document.addEventListener('visibilitychange', function() {
   var chk = document.getElementById('chkAwake');
-  if (!document.hidden && chk && chk.checked && !wakeLock && wakeSupported) {
-    requestWakeLock();
+  if (!document.hidden) {
+    if (chk && chk.checked && !wakeLock && wakeSupported) {
+      // Checkbox still ticked but lock was dropped while hidden — re-acquire
+      requestWakeLock();
+    } else if (chk && chk.checked && !wakeSupported) {
+      // Should never be checked on unsupported — sync to OFF
+      chk.checked = false;
+      setAwakeStatus('off', 'is OFF');
+    }
   }
 });
 </script>
