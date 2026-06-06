@@ -113,6 +113,7 @@ html, body {
 .rgrid { display:grid; gap:0; }
 .rgrid.r4 { grid-template-columns:1fr 1fr 1fr 1fr; }
 .rgrid.r3 { grid-template-columns:1fr 1fr 2fr; border-top:1px solid var(--border); }
+.rgrid.r3l { grid-template-columns:2fr 1fr 1fr; border-top:1px solid var(--border); }
 .cell { padding:8px 9px 10px; border-right:1px solid var(--border); }
 .cell:last-child { border-right:none; }
 .cell-lbl { font-size:.7rem; color:var(--sub); font-weight:500; margin-bottom:4px; white-space:nowrap; line-height:1.2; }
@@ -270,14 +271,6 @@ html, body {
   <div class="card">
     <div class="rgrid r4">
       <div class="cell">
-        <div class="cell-lbl">Dry Bulb</div>
-        <div class="val-box"><div class="val ld bold" id="v-temp">···</div></div>
-      </div>
-      <div class="cell">
-        <div class="cell-lbl">RH</div>
-        <div class="val-box"><div class="val ld" id="v-rh">···</div></div>
-      </div>
-      <div class="cell">
         <div class="cell-lbl">Wind Direction</div>
         <div class="val-box"><div class="val ld bold" id="v-wdir">···</div></div>
       </div>
@@ -285,8 +278,21 @@ html, body {
         <div class="cell-lbl">Wind Speed</div>
         <div class="val-box"><div class="val ld bold" id="v-wspd">···</div></div>
       </div>
+      <div class="cell">
+        <div class="cell-lbl">Dry Bulb</div>
+        <div class="val-box"><div class="val ld bold" id="v-temp">···</div></div>
+      </div>
+      <div class="cell">
+        <div class="cell-lbl">RH</div>
+        <div class="val-box"><div class="val ld" id="v-rh">···</div></div>
+      </div>
     </div>
-    <div class="rgrid r3">
+    <div class="rgrid r3l">
+      <div class="cell">
+        <div class="cell-lbl">Rainfall <span class="ctag">(5-min)</span></div>
+        <div class="val-box" id="wrap-rain"><div class="val na" id="v-rain">—</div></div>
+        <button id="btnMute" onclick="toggleMute()" style="display:none;">🔊</button>
+      </div>
       <div class="cell">
         <div class="cell-lbl">Wet Bulb <span class="ctag">(Calc)</span></div>
         <div class="val-box calc-box"><div class="val na" id="v-wb">—</div></div>
@@ -294,11 +300,6 @@ html, body {
       <div class="cell">
         <div class="cell-lbl">Dew Point <span class="ctag">(Calc)</span></div>
         <div class="val-box calc-box"><div class="val na bold" id="v-dp">—</div></div>
-      </div>
-      <div class="cell">
-        <div class="cell-lbl">Rainfall <span class="ctag">(5-min)</span></div>
-        <div class="val-box" id="wrap-rain"><div class="val na" id="v-rain">—</div></div>
-        <button id="btnMute" onclick="toggleMute()" style="display:none;">🔊</button>
       </div>
     </div>
   </div>
