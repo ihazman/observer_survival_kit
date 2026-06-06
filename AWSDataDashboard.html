@@ -153,16 +153,20 @@ html, body {
   width:100%; min-height:36px;
 }
 .qnh-input:focus { outline:none; border-color:var(--accent); }
+.qnh-input.error { border-color:#c0392b; background:#fff5f5; }
+.qnh-err { display:none; font-size:.65rem; color:#c0392b; font-family:var(--sans); margin-top:2px; line-height:1.3; }
+.qnh-err.show { display:block; }
 .qnh-input[readonly] { background:#f0f0f0; border-color:#000; color:#000; font-weight:600; cursor:not-allowed; }
-.qnh-result-box { border-color:#000; background:#f0f0f0; font-size:1.42rem; font-weight:700; color:#000; }
+.qnh-result-box { border-color:#000; background:#f0f0f0; font-size:1.42rem; font-weight:700; color:#000; display:flex; align-items:center; cursor:default; user-select:text; }
 .qnh-btn {
   background:var(--surface); border:1.5px solid #000; border-radius:3px; color:#000;
   padding:6px 14px; font-family:var(--sans); font-size:.88rem; font-weight:700; letter-spacing:.04em;
   white-space:nowrap; min-height:36px; align-self:flex-end; transition:background .15s, color .15s;
 }
 .qnh-btn:active { background:#000; color:#fff; }
-.qnh-btn-clear { border-color:var(--border2); color:var(--sub); }
-.qnh-btn-clear:active { background:var(--border2); color:#fff; }
+.qnh-btn-clear { border-color:#000; color:#000; }
+.qnh-btn-clear.dimmed { border-color:var(--border2); color:var(--sub); }
+.qnh-btn-clear.dimmed:active { background:var(--border2); color:#fff; }
 .qnh-chk-wrap {
   display:inline-flex; align-items:center; gap:3px;
   font-size:.62rem; color:var(--accent); cursor:pointer;
@@ -195,15 +199,14 @@ html, body {
   cursor: pointer;
 }
 .awake-status {
-  font-family: var(--mono);
-  font-size: .65rem;
-  padding: 1px 7px;
-  border-radius: 3px;
+  font-family: var(--sans);
+  font-size: .72rem;
+  padding: 0;
   display: none;
 }
-.awake-status.on  { display:inline; background:#e8f1ff; color:var(--accent);  border:1px solid var(--accent)44; }
-.awake-status.off { display:inline; background:#f4f6fa; color:var(--sub);     border:1px solid var(--border); }
-.awake-status.no  { display:inline; background:#fff3e0; color:#b35c00;        border:1px solid #b35c0044; }
+.awake-status.on  { display:inline; color:var(--accent); font-weight:700; }
+.awake-status.off { display:inline; color:var(--sub); }
+.awake-status.no  { display:inline; color:#b35c00; }
 
 /* Footnote */
 .footnote { text-align:center; padding:10px 0 18px; font-family:var(--sans); font-size:.8rem; color:#aaa; letter-spacing:.02em; }
@@ -284,11 +287,13 @@ html, body {
       <div class="qnh-row">
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-att">Attached Thermometer</label>
-          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="fmtInput(this)">
+          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="validateAtt(this)" oninput="updClearBtn()">
+          <span class="qnh-err" id="att-err"></span>
         </div>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-baro">As Read (xxxx.x)</label>
-          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="fmtInput(this)">
+          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="validateBaro(this)" oninput="updClearBtn()">
+          <span class="qnh-err" id="baro-err"></span>
         </div>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-db" style="display:flex;align-items:center;gap:5px;">
@@ -302,11 +307,11 @@ html, body {
         </div>
       </div>
       <div class="qnh-row">
-        <button class="qnh-btn qnh-btn-clear" onclick="clearQNH()">Clear</button>
-        <button class="qnh-btn" onclick="calculateQNH()">Calculate QNH</button>
+        <button class="qnh-btn qnh-btn-clear dimmed" id="btnClear" onclick="clearQNH()">Clear</button>
+        <button class="qnh-btn" onclick="calculateQNH()">Calculate</button>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-result">QNH</label>
-          <input class="qnh-input qnh-result-box" id="qnh-result" type="text" readonly placeholder="—">
+          <div class="qnh-input qnh-result-box" id="qnh-result" title="">—</div>
         </div>
       </div>
     </div>
@@ -328,10 +333,10 @@ html, body {
 <!-- SCREEN AWAKE -->
 <div class="awake-bar">
   <label class="awake-lbl" id="awakeLbl">
-    <input type="checkbox" id="chkAwake" onchange="toggleAwake()">
+    <input type="checkbox" id="chkAwake" checked onchange="toggleAwake()">
     <span>Keep Screen Awake</span>
+    <span class="awake-status" id="awakeStatus"></span>
   </label>
-  <span class="awake-status" id="awakeStatus"></span>
 </div>
 
 <div class="footnote">written by Hazman Mohani (Meteorological Supervisor)</div>
@@ -369,6 +374,7 @@ window.addEventListener('load', function() {
   setInterval(tickDate, 15000);
   fetchAll();
   startCD();
+  setTimeout(toggleAwake, 200);
 });
 
 function buildSel() {
@@ -512,10 +518,10 @@ function updStatus(ts) {
     var lt = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' });
     var utcH = String(d.getUTCHours()).padStart(2,'0');
     var utcM = String(d.getUTCMinutes()).padStart(2,'0');
-    timeStr = lt + ' LT | ' + utcH + ':' + utcM + ' Z';
+    timeStr = '<b style="color:#1a5fb4;font-size:.95rem;">' + lt + ' LT</b> | <b style="color:#b35c00;font-size:.95rem;">' + utcH + ':' + utcM + ' Z</b>';
   }
   document.getElementById('sbox').innerHTML =
-    'Data Timestamp: <b style="color:#267a26;font-size:.95rem;">' + timeStr + '</b>';
+    'Data Timestamp: ' + timeStr;
 }
 
 // ── DATE ──────────────────────────────────────────────────────────
@@ -566,6 +572,46 @@ function fmtInput(el) {
   var v = parseFloat(el.value);
   if (!isNaN(v)) el.value = v.toFixed(1);
 }
+
+function validateAtt(el) {
+  var err = document.getElementById('att-err');
+  var v = parseFloat(el.value);
+  if (el.value.trim() === '') {
+    el.classList.remove('error');
+    err.textContent = ''; err.classList.remove('show');
+    return;
+  }
+  if (isNaN(v) || v < 15 || v > 40) {
+    el.classList.add('error');
+    err.textContent = isNaN(v) ? '⚠ Check value' : (v < 15 ? '⚠ Value too low' : '⚠ Value too high');
+    err.classList.add('show');
+  } else {
+    el.classList.remove('error');
+    err.textContent = ''; err.classList.remove('show');
+    fmtInput(el);
+  }
+}
+
+function validateBaro(el) {
+  var err = document.getElementById('baro-err');
+  var v = parseFloat(el.value);
+  if (el.value.trim() === '') {
+    el.classList.remove('error');
+    err.textContent = '';
+    err.classList.remove('show');
+    return;
+  }
+  if (isNaN(v) || v < 900) {
+    el.classList.add('error');
+    err.textContent = '⚠ Value too low. Enter full reading e.g. 1009.0';
+    err.classList.add('show');
+  } else {
+    el.classList.remove('error');
+    err.textContent = '';
+    err.classList.remove('show');
+    fmtInput(el);
+  }
+}
 var QNH_CISTERN_HT       = 35.0;
 var QNH_LATITUDE         = 1.35;
 var QNH_INDEX_CORRECTION = -0.2;
@@ -583,22 +629,61 @@ function toggleDryBulbLock() {
   }
 }
 
-function clearQNH() {
-  document.getElementById('qnh-att').value = '';
-  document.getElementById('qnh-baro').value = '';
-  document.getElementById('qnh-result').value = '';
-  var chk = document.getElementById('chkUseDryBulb');
-  if (!chk || !chk.checked) {
-    document.getElementById('qnh-db').value = '';
+function updClearBtn() {
+  var att  = document.getElementById('qnh-att').value.trim();
+  var baro = document.getElementById('qnh-baro').value.trim();
+  var btn  = document.getElementById('btnClear');
+  if (btn) {
+    if (att !== '' && baro !== '') btn.classList.remove('dimmed');
+    else btn.classList.add('dimmed');
+  }
+  // Clear errors while user is editing the respective field
+  var attEl = document.getElementById('qnh-att');
+  if (attEl && document.activeElement === attEl) {
+    attEl.classList.remove('error');
+    var attErr = document.getElementById('att-err');
+    if (attErr) { attErr.textContent = ''; attErr.classList.remove('show'); }
+  }
+  var baroEl = document.getElementById('qnh-baro');
+  if (baroEl && document.activeElement === baroEl) {
+    baroEl.classList.remove('error');
+    var err = document.getElementById('baro-err');
+    if (err) { err.textContent = ''; err.classList.remove('show'); }
   }
 }
 
+function clearQNH() {
+  var attEl = document.getElementById('qnh-att');
+  attEl.value = ''; attEl.classList.remove('error');
+  var attErr = document.getElementById('att-err');
+  if (attErr) { attErr.textContent = ''; attErr.classList.remove('show'); }
+  var baroEl = document.getElementById('qnh-baro');
+  baroEl.value = ''; baroEl.classList.remove('error');
+  var err = document.getElementById('baro-err');
+  if (err) { err.textContent = ''; err.classList.remove('show'); }
+  document.getElementById('qnh-result').innerHTML = '—';
+  document.getElementById('qnh-result').title = '';
+  document.getElementById('qnh-result').title = '';
+  var chk = document.getElementById('chkUseDryBulb');
+  if (!chk || !chk.checked) document.getElementById('qnh-db').value = '';
+  updClearBtn();
+}
+
 function calculateQNH() {
+  // Block if any field is in error state
+  if (document.getElementById('qnh-att').classList.contains('error')) {
+    document.getElementById('qnh-result').textContent = 'Check Att Thermo';
+    return;
+  }
+  if (document.getElementById('qnh-baro').classList.contains('error')) {
+    document.getElementById('qnh-result').textContent = 'Check As Read';
+    return;
+  }
   var baro    = parseFloat(document.getElementById('qnh-baro').value);
   var dryBulb = parseFloat(document.getElementById('qnh-db').value);
   var attT    = parseFloat(document.getElementById('qnh-att').value);
   var res     = document.getElementById('qnh-result');
-  if (isNaN(baro) || isNaN(dryBulb) || isNaN(attT)) { res.value = 'Input error'; return; }
+  if (isNaN(baro) || isNaN(dryBulb) || isNaN(attT)) { res.textContent = 'Input error'; return; }
   var altC      = 0.0003086 * QNH_CISTERN_HT;
   var tempC     = ((0.000163 * baro) / (1 + 0.0001818 * attT) + 0.008) * attT;
   var pi        = Math.PI;
@@ -608,7 +693,10 @@ function calculateQNH() {
   var totC      = QNH_INDEX_CORRECTION + altC - tempC + latC;
   var corrC     = baro + totC;
   var corrQNH   = corrC * Math.pow(1 + 0.0065 * QNH_CISTERN_HT / (273.16 + dryBulb), 5.2568) - corrC;
-  res.value     = (corrC + corrQNH).toFixed(1);
+  var qnh = corrC + corrQNH;
+  var qCode = 'Q' + String(Math.floor(qnh)).padStart(4, '0');
+  res.innerHTML = qCode + '&nbsp;&nbsp;<span style="color:#666;font-size:1.42rem;font-weight:400;">(' + qnh.toFixed(1) + ')</span>';
+  res.title = 'Note: QNH Pressure value is always rounded down for METAR/SPECI reports.';
 }
 
 // ── METAR ─────────────────────────────────────────────────────────
@@ -729,12 +817,12 @@ function requestWakeLock() {
   navigator.wakeLock.request('screen')
     .then(function(lock) {
       wakeLock = lock;
-      setAwakeStatus('on', '✓ Keep Screen Awake ON');
+      setAwakeStatus('on', 'is ON');
       wakeLock.addEventListener('release', function() {
         if (document.getElementById('chkAwake').checked && !document.hidden) {
           requestWakeLock();
         } else {
-          setAwakeStatus('off', 'Paused (tab hidden)');
+          setAwakeStatus('off', 'is OFF');
         }
       });
     })
@@ -746,7 +834,7 @@ function requestWakeLock() {
 
 function releaseWakeLock() {
   if (wakeLock) { wakeLock.release(); wakeLock = null; }
-  setAwakeStatus('off', 'Keep Screen Awake OFF');
+  setAwakeStatus('off', 'is OFF');
 }
 
 function setAwakeStatus(cls, msg) {
