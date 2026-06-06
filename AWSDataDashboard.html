@@ -797,7 +797,18 @@ function tryAWC(box, debugLines, tgftpRaw) {
 
 function renderMetarRows(box, raws) {
   box.innerHTML = raws.filter(Boolean).map(function(raw) {
-    return '<div class="metar-row">' + escHtml(raw) + '</div>';
+    var isSpeci = raw.startsWith('SPECI');
+    var isMETAR = raw.startsWith('METAR');
+    var badge = '';
+    var rest = raw;
+    if (isSpeci) {
+      badge = '<span style="display:inline-block;background:#c0392b;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:3px;margin-right:6px;vertical-align:middle;">SPECI</span>';
+      rest = raw.slice(5).trim();
+    } else if (isMETAR) {
+      badge = '<span style="display:inline-block;background:#1a5fb4;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:3px;margin-right:6px;vertical-align:middle;">METAR</span>';
+      rest = raw.slice(5).trim();
+    }
+    return '<div class="metar-row">' + badge + escHtml(rest) + '</div>';
   }).join('');
 }
 
