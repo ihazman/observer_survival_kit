@@ -141,6 +141,14 @@ html, body {
 .metar-type.speci { background:#b35c00; }
 .metar-placeholder { color:var(--sub); font-style:italic; font-size:.74rem; }
 .metar-nodata { color:var(--sub); font-style:italic; }
+.metar-badge {
+  display:inline-block; font-size:.65rem; font-weight:700;
+  letter-spacing:.08em; padding:2px 6px; border-radius:3px;
+  margin-right:5px; vertical-align:middle; color:#fff;
+  font-family:var(--sans);
+}
+.metar-badge-type { background:#1a5fb4; }
+.speci-badge      { background:#c0392b; }
 
 /* QNH panel */
 .qnh-body { padding:10px 10px 12px; display:flex; flex-direction:column; gap:8px; }
@@ -810,10 +818,10 @@ function renderMetarRows(box, raws) {
     var badge = '';
     var rest = raw;
     if (isSpeci) {
-      badge = '<span style="display:inline-block;background:#c0392b;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:3px;margin-right:6px;vertical-align:middle;">SPECI</span>';
+      badge = '<span class="metar-badge speci-badge">SPECI</span>';
       rest = raw.slice(5).trim();
     } else if (isMETAR) {
-      badge = '<span style="display:inline-block;background:#1a5fb4;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:3px;margin-right:6px;vertical-align:middle;">METAR</span>';
+      badge = '<span class="metar-badge metar-badge-type">METAR</span>';
       rest = raw.slice(5).trim();
     }
     return '<div class="metar-row">' + badge + escHtml(rest) + '</div>';
