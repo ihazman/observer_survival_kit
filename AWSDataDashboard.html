@@ -721,10 +721,10 @@ function calculateQNH() {
 var TGFTP_URL = 'https://tgftp.nws.noaa.gov/data/observations/metar/stations/WSAP.TXT';
 var AWC_URL   = 'https://aviationweather.gov/api/data/metar?ids=WSAP&format=json&hours=6';
 var PROXIES   = [
-  function(u) { return 'https://api.cors.lol/?url=' + encodeURIComponent(u); },
-  function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
-  function(u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); },
-  function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+  function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },       // Source 2 — priority
+  function(u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); }, // Source 3
+  function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },      // Source 4
+  function(u) { return 'https://api.cors.lol/?url=' + encodeURIComponent(u); },              // Source 1 (tgftp fallback)
 ];
 
 function fetchWithTimeout(url, ms) {
@@ -739,36 +739,17 @@ function fetchWithTimeout(url, ms) {
 function fetchMetar() {
   var box = document.getElementById('metarBox');
   box.innerHTML = '<div class="metar-row metar-placeholder">Fetching reports...</div>';
-
   var debugLines = [];
-  var tgftpRaw   = null;
-
-  // Try tgftp via cors.lol
-  fetchWithTimeout(PROXIES[0](TGFTP_URL), 20000)
-    .then(function(r) {
-      if (!r.ok) { debugLines.push('tgftp:' + r.status); return tryAWC(box, debugLines, null); }
-      return r.text().then(function(txt) {
-        var lines = txt.trim().split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-        tgftpRaw = lines.find(function(l) { return l.includes('WSAP'); }) || null;
-        debugLines.push(tgftpRaw ? 'tgftp:OK' : 'tgftp:nomatch');
-        if (tgftpRaw) renderMetarRows(box, [tgftpRaw]);
-        return tryAWC(box, debugLines, tgftpRaw);
-      });
-    })
-    .catch(function(e) {
-      debugLines.push('tgftp:' + e.message.slice(0,15));
-      tryAWC(box, debugLines, null);
-    });
+  // Try AWC via proxies first (gives up to 3 reports), then fall back to tgftp (1 report)
+  tryAWC(box, debugLines);
 }
 
-function tryAWC(box, debugLines, tgftpRaw) {
+function tryAWC(box, debugLines) {
   var idx = 0;
   function next() {
     if (idx >= PROXIES.length) {
-      if (!tgftpRaw) {
-        box.innerHTML = '<div class="metar-row metar-nodata">No Data</div>';
-        showDebug(box, debugLines);
-      }
+      // All AWC proxies failed — try tgftp as last resort
+      tryTGFTP(box, debugLines);
       return;
     }
     var makeUrl = PROXIES[idx++];
@@ -793,6 +774,33 @@ function tryAWC(box, debugLines, tgftpRaw) {
       .catch(function(e) { debugLines.push('proxy' + idx + ':' + e.message.slice(0,12)); next(); });
   }
   next();
+}
+
+function tryTGFTP(box, debugLines) {
+  var tgftpProxy = 'https://api.cors.lol/?url=' + encodeURIComponent(TGFTP_URL);
+  fetchWithTimeout(tgftpProxy, 20000)
+    .then(function(r) {
+      if (!r.ok) { debugLines.push('tgftp:' + r.status); showNoData(box, debugLines); return; }
+      return r.text().then(function(txt) {
+        var lines = txt.trim().split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+        var raw = lines.find(function(l) { return l.includes('WSAP'); }) || null;
+        if (raw) {
+          renderMetarRows(box, [raw]);
+        } else {
+          debugLines.push('tgftp:nomatch');
+          showNoData(box, debugLines);
+        }
+      });
+    })
+    .catch(function(e) {
+      debugLines.push('tgftp:' + e.message.slice(0,15));
+      showNoData(box, debugLines);
+    });
+}
+
+function showNoData(box, debugLines) {
+  box.innerHTML = '<div class="metar-row metar-nodata">No Data</div>';
+  showDebug(box, debugLines);
 }
 
 function renderMetarRows(box, raws) {
