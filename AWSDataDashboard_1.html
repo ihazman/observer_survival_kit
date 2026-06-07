@@ -148,7 +148,7 @@ html, body {
   margin-right:5px; vertical-align:middle; color:#fff;
   font-family:var(--sans);
 }
-.metar-badge-type { background:#444; }
+.metar-badge-type { background:#888; }
 .speci-badge      { background:#c0392b; }
 .metar-receipt {
   font-size: .65rem;
@@ -237,6 +237,16 @@ html, body {
 }
 #btnCapture:active { background: var(--accent); border-color: var(--accent); color: #fff; }
 #btnCapture.capturing { opacity: .5; pointer-events: none; }
+/* Stale data icon */
+.stale-icon {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 8px; color: #c0392b;
+  font-size: .72rem; font-weight: 700;
+  animation: staleBlink 1s ease-in-out infinite;
+  vertical-align: middle;
+}
+@keyframes staleBlink { 0%,100%{opacity:1} 50%{opacity:.15} }
+
 .footnote { text-align:center; padding:10px 0 18px; font-family:var(--sans); font-size:.8rem; color:#aaa; letter-spacing:.02em; }
 </style>
 <!-- Google Analytics -->
@@ -280,7 +290,7 @@ html, body {
   </div>
 
   <!-- STATUS -->
-  <div class="status-box" id="sbox">Waiting for data...</div>
+  <div class="status-box" id="sbox">Waiting for data...<span id="staleIcon" style="display:none;"></span></div>
 
   <!-- READINGS -->
   <div class="card">
@@ -416,6 +426,13 @@ window.addEventListener('load', function() {
   setInterval(tickDate, 15000);
   fetchAll();
   startCD();
+  // Set initial status to reflect checkbox state on load
+  if (wakeSupported) {
+    setAwakeStatus('on', 'is ON');
+  } else {
+    document.getElementById('chkAwake').checked = false;
+    setAwakeStatus('no', 'Not supported on this device');
+  }
   // Request wake lock on first user touch/click (required by browsers)
   document.addEventListener('click', function initWakeLock() {
     document.removeEventListener('click', initWakeLock);
@@ -559,15 +576,41 @@ function setLD() {
 // ── STATUS ────────────────────────────────────────────────────────
 function updStatus(ts) {
   var timeStr = '—';
+  var isStale = false;
   if (ts) {
     var d = new Date(ts);
+    var now = new Date();
+    var ageMin = (now - d) / 60000;
+    isStale = ageMin > 10;
     var lt = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' });
     var utcH = String(d.getUTCHours()).padStart(2,'0');
     var utcM = String(d.getUTCMinutes()).padStart(2,'0');
     timeStr = '<b style="color:#1a5fb4;font-size:.95rem;">' + lt + ' LT</b> | <b style="color:#b35c00;font-size:.95rem;">' + utcH + ':' + utcM + ' Z</b>';
   }
+  var staleHtml = isStale
+    ? '&nbsp;<span class="stale-icon">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>'
+      + '<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'
+      + '<line x1="2" y1="2" x2="22" y2="22"/>'
+      + '</svg> No new data</span>'
+    : '';
   document.getElementById('sbox').innerHTML =
-    'Data Timestamp: ' + timeStr;
+    'Data Timestamp: ' + timeStr + staleHtml;
+
+  // Colour all readout values red if stale, black if fresh
+  var staleColour = isStale ? '#c0392b' : '';
+  ['v-wdir','v-wspd','v-temp','v-rh','v-rain','v-wb','v-dp'].forEach(function(id) {
+    var e = document.getElementById(id);
+    if (e) e.style.color = staleColour;
+  });
+
+  // Sync QNH Dry Bulb colour if Use AWS is checked
+  var chkAWS = document.getElementById('chkUseDryBulb');
+  if (chkAWS && chkAWS.checked) {
+    var dbEl = document.getElementById('qnh-db');
+    if (dbEl) dbEl.style.color = isStale ? '#c0392b' : '#000';
+  }
 }
 
 // ── DATE ──────────────────────────────────────────────────────────
@@ -672,6 +715,7 @@ function toggleDryBulbLock() {
     if (st.temperature !== undefined) input.value = st.temperature.toFixed(1);
   } else {
     input.readOnly = false;
+    input.style.color = '#000';
   }
 }
 
