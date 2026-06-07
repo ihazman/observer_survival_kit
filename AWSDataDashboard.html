@@ -150,6 +150,13 @@ html, body {
 }
 .metar-badge-type { background:#1a5fb4; }
 .speci-badge      { background:#c0392b; }
+.metar-receipt {
+  font-size: .65rem;
+  color: var(--sub);
+  font-family: var(--sans);
+  margin-top: 4px;
+  font-style: italic;
+}
 
 /* QNH panel */
 .qnh-body { padding:10px 10px 12px; display:flex; flex-direction:column; gap:8px; }
@@ -772,7 +779,8 @@ function tryAWC(box, debugLines) {
             try { json = JSON.parse(json.contents); } catch(e) { return next(); }
           }
           if (Array.isArray(json) && json.length > 0 && json[0].icaoId) {
-            var raws = json.sort(function(a,b){return b.obsTime-a.obsTime;}).slice(0,3).map(function(r){return r.rawOb||'';});
+            var reports = json.sort(function(a,b){return b.obsTime-a.obsTime;}).slice(0,3);
+            var raws = reports.map(function(r){ return { raw: r.rawOb||'', receipt: r.receiptTime||null }; });
             renderMetarRows(box, raws);
           } else {
             debugLines.push('proxy' + idx + ':badshape');
@@ -794,7 +802,7 @@ function tryTGFTP(box, debugLines) {
         var lines = txt.trim().split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
         var raw = lines.find(function(l) { return l.includes('WSAP'); }) || null;
         if (raw) {
-          renderMetarRows(box, [raw]);
+          renderMetarRows(box, [{ raw: raw, receipt: null }]);
         } else {
           debugLines.push('tgftp:nomatch');
           showNoData(box, debugLines);
@@ -813,7 +821,8 @@ function showNoData(box, debugLines) {
 }
 
 function renderMetarRows(box, raws) {
-  box.innerHTML = raws.filter(Boolean).map(function(raw) {
+  box.innerHTML = raws.filter(function(r){ return r && r.raw; }).map(function(item) {
+    var raw = item.raw;
     var isSpeci = raw.startsWith('SPECI');
     var isMETAR = raw.startsWith('METAR');
     var badge = '';
@@ -825,7 +834,14 @@ function renderMetarRows(box, raws) {
       badge = '<span class="metar-badge metar-badge-type">METAR</span>';
       rest = raw.slice(5).trim();
     }
-    return '<div class="metar-row">' + badge + escHtml(rest) + '</div>';
+    var receiptHtml = '';
+    if (item.receipt) {
+      var d = new Date(item.receipt);
+      var utc = d.getUTCHours().toString().padStart(2,'0') + ':' + d.getUTCMinutes().toString().padStart(2,'0') + ' Z';
+      var lt  = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' }) + ' LT';
+      receiptHtml = '<div class="metar-receipt">Received: ' + utc + ' | ' + lt + '</div>';
+    }
+    return '<div class="metar-row">' + badge + escHtml(rest) + receiptHtml + '</div>';
   }).join('');
 }
 
