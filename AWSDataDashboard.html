@@ -155,7 +155,7 @@ html, body {
   color: var(--sub);
   font-family: var(--sans);
   margin-top: 4px;
-  font-style: italic;
+  text-align: right;
 }
 
 /* QNH panel */
@@ -354,7 +354,7 @@ html, body {
   <!-- METAR -->
   <div class="card">
     <div class="panel-header" style="background:var(--accent);">
-      <span>Latest 3 reports</span>
+      <span>Latest 3 observation reports</span>
       <span class="panel-badge">WSAP</span>
     </div>
     <div id="metarBox">
@@ -839,7 +839,7 @@ function renderMetarRows(box, raws) {
       var d = new Date(item.receipt);
       var utc = d.getUTCHours().toString().padStart(2,'0') + ':' + d.getUTCMinutes().toString().padStart(2,'0') + ' Z';
       var lt  = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' }) + ' LT';
-      receiptHtml = '<div class="metar-receipt">Received: ' + utc + ' | ' + lt + '</div>';
+      receiptHtml = '<div class="metar-receipt">Received: ' + lt + ' | ' + utc + '</div>';
     }
     return '<div class="metar-row">' + badge + escHtml(rest) + receiptHtml + '</div>';
   }).join('');
