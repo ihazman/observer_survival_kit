@@ -239,6 +239,14 @@ html, body {
 #btnCapture.capturing { opacity: .5; pointer-events: none; }
 .footnote { text-align:center; padding:10px 0 18px; font-family:var(--sans); font-size:.8rem; color:#aaa; letter-spacing:.02em; }
 </style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KMRJLNDH8X"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-KMRJLNDH8X');
+</script>
 </head>
 <body>
 <div class="app">
@@ -408,7 +416,11 @@ window.addEventListener('load', function() {
   setInterval(tickDate, 15000);
   fetchAll();
   startCD();
-  setTimeout(toggleAwake, 200);
+  // Request wake lock on first user touch/click (required by browsers)
+  document.addEventListener('click', function initWakeLock() {
+    document.removeEventListener('click', initWakeLock);
+    if (document.getElementById('chkAwake').checked) toggleAwake();
+  }, { once: true });
 });
 
 function buildSel() {
