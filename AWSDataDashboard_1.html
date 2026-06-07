@@ -148,14 +148,13 @@ html, body {
   margin-right:5px; vertical-align:middle; color:#fff;
   font-family:var(--sans);
 }
-.metar-badge-type { background:#1a5fb4; }
+.metar-badge-type { background:#444; }
 .speci-badge      { background:#c0392b; }
 .metar-receipt {
   font-size: .65rem;
   color: var(--sub);
   font-family: var(--sans);
   margin-top: 4px;
-  font-style: italic;
   text-align: right;
 }
 
@@ -240,6 +239,14 @@ html, body {
 #btnCapture.capturing { opacity: .5; pointer-events: none; }
 .footnote { text-align:center; padding:10px 0 18px; font-family:var(--sans); font-size:.8rem; color:#aaa; letter-spacing:.02em; }
 </style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KMRJLNDH8X"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-KMRJLNDH8X');
+</script>
 </head>
 <body>
 <div class="app">
@@ -354,8 +361,8 @@ html, body {
 
   <!-- METAR -->
   <div class="card">
-    <div class="panel-header" style="background:var(--accent);">
-      <span>Latest 3 reports</span>
+    <div class="panel-header" style="background:#444;">
+      <span>Latest 3 observation reports</span>
       <span class="panel-badge">WSAP</span>
     </div>
     <div id="metarBox">
@@ -409,7 +416,11 @@ window.addEventListener('load', function() {
   setInterval(tickDate, 15000);
   fetchAll();
   startCD();
-  setTimeout(toggleAwake, 200);
+  // Request wake lock on first user touch/click (required by browsers)
+  document.addEventListener('click', function initWakeLock() {
+    document.removeEventListener('click', initWakeLock);
+    if (document.getElementById('chkAwake').checked) toggleAwake();
+  }, { once: true });
 });
 
 function buildSel() {
@@ -840,7 +851,7 @@ function renderMetarRows(box, raws) {
       var d = new Date(item.receipt);
       var utc = d.getUTCHours().toString().padStart(2,'0') + ':' + d.getUTCMinutes().toString().padStart(2,'0') + ' Z';
       var lt  = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' }) + ' LT';
-      receiptHtml = '<div class="metar-receipt">Received: ' + utc + ' | ' + lt + '</div>';
+      receiptHtml = '<div class="metar-receipt">Received: ' + lt + ' | ' + utc + '</div>';
     }
     return '<div class="metar-row">' + badge + escHtml(rest) + receiptHtml + '</div>';
   }).join('');
