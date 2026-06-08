@@ -106,10 +106,10 @@ html, body {
 .cell:last-child { border-right:none; }
 .cell-lbl { font-size:.7rem; color:var(--sub); font-weight:500; margin-bottom:4px; white-space:nowrap; line-height:1.2; }
 .cell-lbl .ctag { font-size:.6rem; color:#999; font-style:italic; }
-.val-box { background:var(--vbg); border:1.5px solid var(--border2); border-radius:3px; padding:5px 7px; min-height:38px; display:flex; align-items:center; }
+.val-box { background:var(--vbg); border:1.5px solid var(--border2); border-radius:3px; padding:3px 7px; min-height:32px; display:flex; align-items:center; }
 .val-box.hi { border-color:var(--accent); background:#e8eef4; }
 .val-box.calc-box { border-style:dashed; background:#f4f6fa; }
-.val { font-family:var(--mono); font-size:1.42rem; color:var(--text); letter-spacing:.02em; line-height:1; }
+.val { font-family:var(--mono); font-size:1.2rem; color:var(--text); letter-spacing:.02em; line-height:1; }
 .val.bold { font-weight:700; }
 .val.ld { color:#bbb; font-size:1rem; animation:pulse 1s ease-in-out infinite; }
 .val.na { color:#ccc; font-size:.9rem; }
@@ -119,6 +119,7 @@ html, body {
   color:#fff; padding:6px 12px;
   font-family:var(--sans); font-size:.82rem; font-weight:700; letter-spacing:.04em;
   display:flex; align-items:center; justify-content:space-between;
+  min-height:38px;
 }
 .panel-badge { font-family:var(--mono); font-size:.8rem; background:rgba(255,255,255,.18); padding:1px 7px; border-radius:3px; letter-spacing:.1em; }
 
@@ -153,8 +154,8 @@ html, body {
 .qnh-lbl { font-size:.7rem; color:var(--sub); font-weight:500; white-space:nowrap; font-family:var(--sans); }
 .qnh-input {
   background:var(--vbg); border:1.5px solid var(--border2); border-radius:3px;
-  padding:5px 7px; font-family:var(--mono); font-size:1.1rem; color:var(--text);
-  width:100%; min-height:36px;
+  padding:3px 7px; font-family:var(--mono); font-size:.95rem; color:var(--text);
+  width:100%; min-height:30px;
 }
 .qnh-input:focus { outline:none; border-color:var(--accent); }
 .qnh-input.error { border-color:#c0392b; background:#fff5f5; }
@@ -223,7 +224,7 @@ html, body {
   border-radius: 3px;
   padding: 5px 8px;
   font-family: var(--sans);
-  font-size: .82rem;
+  font-size: .95rem;
   color: #000;
   background: var(--vbg);
   line-height: 1.5;
@@ -265,6 +266,7 @@ html, body {
 }
 .notes-btn:active { background: rgba(255,255,255,.35); }
 .notes-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+.notes-btn.dimmed { opacity: .4; }
 
 /* Stale data icon */
 .stale-icon {
@@ -308,7 +310,7 @@ html, body {
       <span class="date-str" id="dstr">—</span>
       <label class="auto-lbl">
         <input type="checkbox" id="autoChk" checked onchange="toggleAuto()">
-        <span id="autoTxt">Auto refresh in — sec</span>
+        <span id="autoTxt">Fetch in —s</span>
       </label>
     </div>
   </div>
@@ -356,17 +358,27 @@ html, body {
   <!-- QNH -->
   <div class="card">
     <div class="panel-header" style="background:#000;">
-      <span>QNH Calculation (Kew Pattern Barometer)</span>
+      <span>QNH Calculation</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="notes-btn qnh-btn-clear dimmed" id="btnClear" onclick="clearQNH()" title="Clear fields">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <span>Clear</span>
+        </button>
+        <button class="notes-btn" id="btnCalculate" onclick="calculateQNH()" title="Calculate QNH">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/></svg>
+          <span>Calculate</span>
+        </button>
+      </div>
     </div>
     <div class="qnh-body">
       <div class="qnh-row">
         <div class="qnh-field">
-          <label class="qnh-lbl" for="qnh-att">Attached Thermometer</label>
+          <label class="qnh-lbl" for="qnh-att">Att Thermo</label>
           <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="validateAtt(this)" oninput="updClearBtn()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('qnh-baro').focus();}">
           <span class="qnh-err" id="att-err"></span>
         </div>
         <div class="qnh-field">
-          <label class="qnh-lbl" for="qnh-baro">As Read (xxxx.x)</label>
+          <label class="qnh-lbl" for="qnh-baro">As Read</label>
           <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="validateBaro(this)" oninput="updClearBtn()" onkeydown="if(event.key==='Enter'){event.preventDefault();validateBaro(this);calculateQNH();}">
           <span class="qnh-err" id="baro-err"></span>
         </div>
@@ -382,8 +394,6 @@ html, body {
         </div>
       </div>
       <div class="qnh-row">
-        <button class="qnh-btn qnh-btn-clear dimmed" id="btnClear" onclick="clearQNH()">Clear</button>
-        <button class="qnh-btn" onclick="calculateQNH()">Calculate</button>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-result">QNH</label>
           <div class="qnh-input qnh-result-box" id="qnh-result" title="">—</div>
@@ -522,11 +532,11 @@ function startCD() {
 function stopCD() { if (cdTimer) { clearInterval(cdTimer); cdTimer = null; } }
 function toggleAuto() {
   if (document.getElementById('autoChk').checked) startCD();
-  else { stopCD(); document.getElementById('autoTxt').textContent = 'Auto refresh off'; }
+  else { stopCD(); document.getElementById('autoTxt').textContent = 'Auto Fetch off'; }
 }
 function updCD() {
   if (document.getElementById('autoChk').checked)
-    document.getElementById('autoTxt').textContent = 'Auto refresh in ' + cdSec + ' sec';
+    document.getElementById('autoTxt').textContent = 'Fetch in ' + cdSec + 's';
 }
 
 // ── FETCH ─────────────────────────────────────────────────────────
@@ -669,7 +679,7 @@ function updStatus(ts) {
 // ── DATE ──────────────────────────────────────────────────────────
 function tickDate() {
   document.getElementById('dstr').textContent = new Date().toLocaleDateString('en-SG', {
-    weekday:'long', month:'long', day:'numeric', year:'numeric', timeZone:'Asia/Singapore'
+    weekday:'short', month:'short', day:'numeric', year:'numeric', timeZone:'Asia/Singapore'
   });
 }
 
@@ -780,7 +790,6 @@ function updClearBtn() {
     if (att !== '' && baro !== '') btn.classList.remove('dimmed');
     else btn.classList.add('dimmed');
   }
-  // Clear errors while user is editing the respective field
   var attEl = document.getElementById('qnh-att');
   if (attEl && document.activeElement === attEl) {
     attEl.classList.remove('error');
