@@ -704,7 +704,7 @@ function announceRain(rf, ts) {
   if (rf <= 0) { lastRainTs = ts; return; }
   if (ts && ts === lastRainTs) return;
   lastRainTs = ts;
-  var utt = new SpeechSynthesisUtterance(rf.toFixed(1) + ' m m, of rainfall detected.');
+  var utt = new SpeechSynthesisUtterance(rf.toFixed(1) + ', m, m, of rainfall detected.');
   utt.lang = 'en-SG'; utt.rate = 0.92;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utt);
