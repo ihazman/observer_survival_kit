@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AWS Dashboard for PLMO Weather Observers</title>
+<title>AWS Dashboard</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
 
@@ -78,20 +78,8 @@ html, body {
 #stationSel:focus { outline:none; border-color:var(--accent); }
 .sel-wrap::after { content:'▾'; position:absolute; right:8px; top:50%; transform:translateY(-50%); color:var(--sub); pointer-events:none; font-size:.75rem; }
 
-#btnFetch {
-  background:var(--accent); color:#fff;
-  border:none; border-radius:var(--r);
-  padding:0 15px; min-height:36px; height:36px;
-  font-family:var(--sans); font-size:.9rem; font-weight:700;
-  display:flex; align-items:center; gap:5px;
-  transition:background .15s; white-space:nowrap;
-}
-#btnFetch:active { background:var(--accent2); }
 #btnFetch.spinning svg { animation:spin .7s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
-
-.cycle-box { font-family:var(--mono); font-size:.7rem; color:var(--sub); text-align:right; line-height:1.35; min-width:68px; }
-.cycle-box span { display:block; font-size:.9rem; color:var(--accent); font-weight:700; }
 
 /* Date + auto row */
 .row-sub {
@@ -224,28 +212,13 @@ html, body {
 .awake-status.off { display:inline; color:var(--sub); }
 .awake-status.no  { display:inline; color:#b35c00; }
 
-#btnCapture {
-  background: var(--surface);
-  border: 1.5px solid var(--border2);
-  border-radius: var(--r);
-  color: var(--sub);
-  padding: 6px 9px;
-  min-height: 36px;
-  height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s, border-color .15s, color .15s;
-  flex-shrink: 0;
-}
-#btnCapture:active { background: var(--accent); border-color: var(--accent); color: #fff; }
-#btnCapture.capturing { opacity: .5; pointer-events: none; }
 /* Quick Notes */
 .notes-body { padding: 6px 10px 8px; }
 .notes-ta {
   width: 100%;
   min-height: 32px;
   max-height: 300px;
-  resize: none;
-  overflow: hidden;
+  overflow-y: auto;
   border: 1.5px solid var(--border2);
   border-radius: 3px;
   padding: 5px 8px;
@@ -257,19 +230,38 @@ html, body {
   box-sizing: border-box;
   transition: border-color .15s;
   display: block;
+  -webkit-user-select: text;
+  user-select: text;
+  word-break: break-word;
+  white-space: pre-wrap;
+  outline: none;
 }
-.notes-ta:focus { outline: none; border-color: #006666; }
-.notes-ta:disabled { background: #f4f6fa; color: #555; cursor: not-allowed; }
+.notes-ta:focus { border-color: #006666; }
+.notes-ta[contenteditable="false"] { background: #f4f6fa; color: #555; cursor: not-allowed; }
+.notes-ta:empty::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  pointer-events: none;
+}
+.metar-placeholder-tag {
+  background: rgba(242, 255, 0, 1);
+  color: #000;
+  border-radius: 2px;
+  padding: 0 1px;
+  font-style: normal;
+}
 .notes-btn {
   background: rgba(255,255,255,.18);
   border: 1px solid rgba(255,255,255,.35);
   border-radius: 4px;
   color: #fff;
-  padding: 3px 7px;
+  padding: 3px 9px;
   cursor: pointer;
-  display: flex; align-items: center;
+  display: flex; align-items: center; gap: 5px;
   min-height: 26px;
+  font-family: var(--sans); font-size: .72rem; font-weight: 600;
   transition: background .15s;
+  white-space: nowrap;
 }
 .notes-btn:active { background: rgba(255,255,255,.35); }
 .notes-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
@@ -300,24 +292,19 @@ html, body {
 
   <!-- HEADER -->
   <div class="card">
-    <div class="titlebar"><div class="t-dot"></div>AWS Dashboard for PLMO Weather Observers</div>
-    <div class="row-top">
-      <div class="sel-wrap">
-        <select id="stationSel" onchange="onStation()"></select>
-      </div>
-      <button id="btnFetch" onclick="fetchAll()">
+    <div class="titlebar">
+      <div class="t-dot"></div>
+      <span style="flex:1;">AWS Dashboard</span>
+      <div style="color:#fff;font-family:var(--mono);font-size:.65rem;white-space:nowrap;">Cycle(s): <span id="cyc" style="font-weight:700;">0</span></div>
+      <button id="btnFetch" class="notes-btn" onclick="fetchAll()" style="margin-left:8px;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        Fetch
+        <span>Fetch</span>
       </button>
-      <button id="btnCapture" onclick="captureScreen()" title="Save screenshot">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
-      </button>
-      <div class="cycle-box">Cycle(s):<span id="cyc">0</span></div>
     </div>
     <div class="row-sub">
+      <div class="sel-wrap" style="flex:1;max-width:55%;">
+        <select id="stationSel" onchange="onStation()"></select>
+      </div>
       <span class="date-str" id="dstr">—</span>
       <label class="auto-lbl">
         <input type="checkbox" id="autoChk" checked onchange="toggleAuto()">
@@ -375,12 +362,12 @@ html, body {
       <div class="qnh-row">
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-att">Attached Thermometer</label>
-          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="validateAtt(this)" oninput="updClearBtn()">
+          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="validateAtt(this)" oninput="updClearBtn()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('qnh-baro').focus();}">
           <span class="qnh-err" id="att-err"></span>
         </div>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-baro">As Read (xxxx.x)</label>
-          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="validateBaro(this)" oninput="updClearBtn()">
+          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="validateBaro(this)" oninput="updClearBtn()" onkeydown="if(event.key==='Enter'){event.preventDefault();validateBaro(this);calculateQNH();}">
           <span class="qnh-err" id="baro-err"></span>
         </div>
         <div class="qnh-field">
@@ -410,17 +397,29 @@ html, body {
     <div class="panel-header" style="background:#006666;">
       <span>Quick Notes</span>
       <div style="display:flex;gap:6px;align-items:center;">
+        <button class="notes-btn" id="btnMetarTpl" onclick="insertMetarTemplate()" title="Insert METAR template">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>METAR</span>
+        </button>
+        <button class="notes-btn" id="btnSpeciTpl" onclick="insertSpeciTemplate()" title="Insert SPECI template">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>SPECI</span>
+        </button>
         <button class="notes-btn" id="btnNotesLock" onclick="toggleNotesLock()" disabled title="Lock notes">
           <svg id="lockIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span id="lockCaption">Lock</span>
         </button>
         <button class="notes-btn" id="btnNotesClear" onclick="clearNotes()" title="Clear notes">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <span>Clear</span>
         </button>
       </div>
     </div>
     <div class="notes-body">
-      <textarea id="notesArea" class="notes-ta" placeholder="Tap to add notes..."
-        oninput="onNotesInput()" onblur="onNotesBlur()" rows="1"></textarea>
+      <div id="notesArea" class="notes-ta" contenteditable="true"
+        data-placeholder="Tap to add notes..."
+        oninput="onNotesInput()" onblur="onNotesBlur()"
+        style="-webkit-user-select:text;user-select:text;"></div>
     </div>
   </div>
 
@@ -841,6 +840,17 @@ function calculateQNH() {
   var qCode = 'Q' + String(Math.floor(qnh)).padStart(4, '0');
   res.innerHTML = qCode + '&nbsp;&nbsp;<span style="color:#666;font-size:1.42rem;font-weight:400;">(' + qnh.toFixed(1) + ')</span>';
   res.title = 'Note: QNH Pressure value is always rounded down for METAR/SPECI reports.';
+
+  // If notesArea is not locked and contains <QNH>, replace it with the coded Q value
+  if (!notesLocked) {
+    var notesEl = document.getElementById('notesArea');
+    if (notesEl && notesEl.innerHTML.indexOf('&lt;QNH&gt;') !== -1) {
+      notesEl.innerHTML = notesEl.innerHTML.replace(
+        /(<span[^>]*metar-placeholder-tag[^>]*>)?&lt;QNH&gt;(<\/span>)?/g,
+        qCode
+      );
+    }
+  }
 }
 
 // ── METAR ─────────────────────────────────────────────────────────
@@ -967,110 +977,147 @@ function escHtml(s) {
 }
 
 // ── SCREEN CAPTURE ────────────────────────────────────────────────
-function captureScreen() {
-  var btn = document.getElementById('btnCapture');
-  btn.classList.add('capturing');
-
-  // Load html2canvas dynamically if not already loaded
-  if (typeof html2canvas === 'undefined') {
-    var script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    script.onload = function() { doCapture(btn); };
-    script.onerror = function() {
-      btn.classList.remove('capturing');
-      alert('Could not load screenshot library. Please check your internet connection.');
-    };
-    document.head.appendChild(script);
-  } else {
-    doCapture(btn);
-  }
-}
-
-function doCapture(btn) {
-  var target = document.querySelector('.app');
-  html2canvas(target, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: getComputedStyle(document.body).backgroundColor || '#eef0f4',
-    logging: false
-  }).then(function(canvas) {
-    var now = new Date();
-    var sgTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Singapore' }));
-    var yy  = String(sgTime.getFullYear()).slice(2);
-    var MM  = String(sgTime.getMonth() + 1).padStart(2, '0');
-    var dd  = String(sgTime.getDate()).padStart(2, '0');
-    var HH  = String(sgTime.getHours()).padStart(2, '0');
-    var mm  = String(sgTime.getMinutes()).padStart(2, '0');
-    var ss  = String(sgTime.getSeconds()).padStart(2, '0');
-    var filename = yy + MM + dd + '_' + HH + mm + ss + '_AWSDashboard.png';
-
-    canvas.toBlob(function(blob) {
-      // Try Web Share API first (iOS Safari + Android Chrome)
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'image/png' })] })) {
-        var file = new File([blob], filename, { type: 'image/png' });
-        navigator.share({ files: [file], title: 'AWS Dashboard' })
-          .catch(function() {})
-          .finally(function() { btn.classList.remove('capturing'); });
-      } else {
-        // Fallback: direct download
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url; a.download = filename;
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a);
-        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-        btn.classList.remove('capturing');
-      }
-    }, 'image/png');
-  }).catch(function(e) {
-    console.warn('Capture failed:', e);
-    btn.classList.remove('capturing');
-    alert('Screenshot failed: ' + e.message);
-  });
-}
-
 // ── QUICK NOTES ───────────────────────────────────────────────────
 var notesLocked = false;
 
+function getNotesText() {
+  var el = document.getElementById('notesArea');
+  return el ? el.innerText || '' : '';
+}
+
+// ── AUTO UPPERCASE FOR METAR/SPECI LINES ─────────────────────────
+var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+function getCaretOffset(el) {
+  var sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return 0;
+  var range = sel.getRangeAt(0).cloneRange();
+  range.selectNodeContents(el);
+  range.setEnd(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset);
+  return range.toString().length;
+}
+
+function setCaretOffset(el, offset) {
+  var sel = window.getSelection();
+  if (!sel) return;
+  var nodeStack = [el], node, found = false, charCount = 0;
+  while (!found && (node = nodeStack.pop())) {
+    if (node.nodeType === 3) {
+      var nextCount = charCount + node.length;
+      if (nextCount >= offset) {
+        var range = document.createRange();
+        range.setStart(node, offset - charCount);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        found = true;
+      }
+      charCount = nextCount;
+    } else {
+      var i = node.childNodes.length;
+      while (i--) nodeStack.push(node.childNodes[i]);
+    }
+  }
+}
+
+function applyMetarUppercase(el) {
+  var caretPos = getCaretOffset(el);
+  var lines = el.innerHTML.split(/<br\s*\/?>/i);
+  var changed = false;
+  var newLines = lines.map(function(line) {
+    var plain = line.replace(/<[^>]+>/g, '');
+    if (/^(METAR|SPECI)/i.test(plain.trim())) {
+      var eqIdx = plain.indexOf('=');
+      // Only uppercase text strictly BEFORE the = (not including = or after)
+      var limit = eqIdx !== -1 ? eqIdx : plain.length;
+      var tempDiv = document.createElement('div');
+      tempDiv.innerHTML = line;
+      var textSeen = 0;
+      var walk = function(node) {
+        if (node.nodeType === 3) {
+          var nodeLen = node.length;
+          if (textSeen < limit) {
+            var take = Math.min(nodeLen, limit - textSeen);
+            var before = node.textContent.slice(0, take);
+            var upper  = before.toUpperCase();
+            if (upper !== before) {
+              node.textContent = upper + node.textContent.slice(take);
+              changed = true;
+            }
+          }
+          textSeen += nodeLen;
+        } else {
+          Array.from(node.childNodes).forEach(walk);
+        }
+      };
+      Array.from(tempDiv.childNodes).forEach(walk);
+      return tempDiv.innerHTML;
+    }
+    return line;
+  });
+  if (changed) {
+    el.innerHTML = newLines.join('<br>');
+    setCaretOffset(el, caretPos);
+  }
+}
+
 function onNotesInput() {
-  autoResizeNotes();
+  var el = document.getElementById('notesArea');
+  applyMetarUppercase(el);
   updNotesButtons();
 }
 
 function onNotesBlur() {
-  var ta = document.getElementById('notesArea');
-  // Trim trailing whitespace and blank lines
-  var trimmed = ta.value.replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trimEnd();
-  ta.value = trimmed;
-  autoResizeNotes();
+  var el = document.getElementById('notesArea');
+  if (!el) return;
+
+  // Apply uppercase to METAR/SPECI lines on blur as final pass
+  applyMetarUppercase(el);
+
+  // Collapse multiple spaces and remove space before =
+  var html = el.innerHTML;
+  html = html.replace(/( |&nbsp;){2,}/g, ' ');
+  html = html.replace(/ =/g, '=');
+  el.innerHTML = html;
+
+  // Review yellow highlights — remove span wrapper if text no longer matches <...> pattern
+  // Do this AFTER innerHTML reassignment to avoid re-insertion
+  var spans = el.querySelectorAll('.metar-placeholder-tag');
+  spans.forEach(function(span) {
+    var txt = (span.textContent || span.innerText || '').trim();
+    if (!/^<[^>]+>$/.test(txt)) {
+      var parent = span.parentNode;
+      if (parent) {
+        var textNode = document.createTextNode(span.textContent);
+        parent.replaceChild(textNode, span);
+      }
+    }
+  });
+
+  var lines = el.innerText.split('\n');
+  var allEmpty = lines.every(function(l){ return l.trim() === ''; });
+  if (allEmpty) { el.innerHTML = ''; }
+
   updNotesButtons();
 }
 
-function autoResizeNotes() {
-  var ta = document.getElementById('notesArea');
-  ta.style.height = 'auto';
-  ta.style.height = (ta.value === '' ? 32 : Math.min(ta.scrollHeight, 300)) + 'px';
-  ta.style.overflow = ta.scrollHeight > 300 ? 'auto' : 'hidden';
-}
-
 function updNotesButtons() {
-  var ta    = document.getElementById('notesArea');
-  var hasText = ta.value.trim() !== '';
+  var hasText = getNotesText().trim() !== '';
   var lockBtn  = document.getElementById('btnNotesLock');
   var clearBtn = document.getElementById('btnNotesClear');
-  lockBtn.disabled  = !hasText;
-  clearBtn.disabled = !hasText || notesLocked;
+  if (lockBtn)  lockBtn.disabled  = !hasText;
+  if (clearBtn) clearBtn.disabled = !hasText || notesLocked;
 }
 
 function toggleNotesLock() {
-  var ta = document.getElementById('notesArea');
+  var el = document.getElementById('notesArea');
   var lockBtn = document.getElementById('btnNotesLock');
   notesLocked = !notesLocked;
-  ta.disabled = notesLocked;
-  // Swap lock icon to locked/unlocked
-  lockBtn.innerHTML = notesLocked
+  el.contentEditable = notesLocked ? 'false' : 'true';
+  var iconSvg = notesLocked
     ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg>'
     : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+  lockBtn.innerHTML = iconSvg + '<span>' + (notesLocked ? 'Unlock' : 'Lock') + '</span>';
   lockBtn.title = notesLocked ? 'Unlock notes' : 'Lock notes';
   lockBtn.style.background = notesLocked ? 'rgba(255,255,255,.45)' : '';
   updNotesButtons();
@@ -1079,18 +1126,99 @@ function toggleNotesLock() {
 function clearNotes() {
   if (notesLocked) return;
   if (!confirm('Clear all notes? This cannot be undone.')) return;
-  var ta = document.getElementById('notesArea');
-  ta.value = '';
-  autoResizeNotes();
+  var el = document.getElementById('notesArea');
+  el.innerHTML = '';
+  updNotesButtons();
+}
+
+// ── METAR TEMPLATE INSERT ─────────────────────────────────────────
+// ── METAR / SPECI TEMPLATE INSERT ────────────────────────────────
+function ph(s) { return '<span class="metar-placeholder-tag">' + s + '</span>'; }
+
+function buildReportTemplate(type, strUTC) {
+  var wdirEl = document.getElementById('v-wdir');
+  var wspdEl = document.getElementById('v-wspd');
+  var wdir = wdirEl ? wdirEl.textContent.trim() : '';
+  var wspd = wspdEl ? wspdEl.textContent.trim() : '';
+  var wspdNum = parseInt(wspd) || 0;
+  var strWindGRP = wspdNum === 0 ? '00000' : (wdir.padStart(3,'0') + wspd.padStart(2,'0'));
+
+  var tempEl = document.getElementById('v-temp');
+  var tempVal = tempEl ? parseFloat(tempEl.textContent) : NaN;
+  var strDRY = isNaN(tempVal) ? ph('&lt;T&gt;') : Math.round(tempVal).toString();
+
+  var dpEl = document.getElementById('v-dp');
+  var dpVal = dpEl ? parseFloat(dpEl.textContent) : NaN;
+  var strDP = isNaN(dpVal) ? ph('&lt;DP&gt;') : Math.round(dpVal).toString();
+
+  var qnhEl = document.getElementById('qnh-result');
+  var qnhText = qnhEl ? (qnhEl.innerText || qnhEl.textContent || '') : '';
+  var qMatch = qnhText.match(/Q\d{4}/);
+  var strQNH = qMatch ? qMatch[0] : ph('&lt;QNH&gt;');
+
+  return type + ' WSAP ' + strUTC + 'Z ' + strWindGRP + 'KT '
+    + ph('&lt;CODED VIS&gt;') + ' '
+    + ph('&lt;PRESENT WX&gt;') + ' '
+    + ph('&lt;CODED CLOUD&gt;') + ' '
+    + strDRY + '/' + strDP + ' '
+    + strQNH + ' '
+    + ph('&lt;RECENT WX&gt;') + ' =';
+}
+
+function buildMetarTemplate() {
+  var now = new Date();
+  var dd = now.getUTCDate(), hh = now.getUTCHours(), min = now.getUTCMinutes();
+  if (min > 15) {
+    hh += 1;
+    if (hh >= 24) { hh = 0; dd += 1; }
+    var t = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), dd));
+    dd = t.getUTCDate();
+  }
+  var strUTC = String(dd).padStart(2,'0') + String(hh).padStart(2,'0') + '00';
+  return buildReportTemplate('METAR', strUTC);
+}
+
+function buildSpeciTemplate() {
+  var now = new Date();
+  var strUTC = String(now.getUTCDate()).padStart(2,'0')
+             + String(now.getUTCHours()).padStart(2,'0')
+             + String(now.getUTCMinutes()).padStart(2,'0');
+  return buildReportTemplate('SPECI', strUTC);
+}
+
+function insertMetarTemplate() { if (!notesLocked) insertTemplate(buildMetarTemplate()); }
+function insertSpeciTemplate()  { if (!notesLocked) insertTemplate(buildSpeciTemplate()); }
+
+function insertTemplate(tplHtml) {
+  var el = document.getElementById('notesArea');
+  var curHtml = el.innerHTML.trim();
+  // Always insert at top with a newline after
+  el.innerHTML = curHtml !== '' ? tplHtml + '<br>' + curHtml : tplHtml;
+  // Move cursor to end of inserted template (after the br)
+  var sel = window.getSelection();
+  if (sel) {
+    var r = document.createRange();
+    // Place cursor at start of existing content (after the new line)
+    var firstBr = el.querySelector('br');
+    if (firstBr && firstBr.nextSibling) {
+      r.setStartBefore(firstBr.nextSibling);
+    } else {
+      r.selectNodeContents(el);
+      r.collapse(false);
+    }
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+  el.focus();
   updNotesButtons();
 }
 
 // Warn user before page refresh/close if Quick Notes has content
 window.addEventListener('beforeunload', function(e) {
-  var ta = document.getElementById('notesArea');
-  if (ta && ta.value.trim() !== '') {
+  if (getNotesText().trim() !== '') {
     e.preventDefault();
-    e.returnValue = ''; // Required for Chrome/Edge to show the dialog
+    e.returnValue = '';
   }
 });
 
