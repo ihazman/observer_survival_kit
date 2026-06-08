@@ -873,7 +873,7 @@ function calculateQNH() {
 
 // ── METAR ─────────────────────────────────────────────────────────
 var TGFTP_URL = 'https://tgftp.nws.noaa.gov/data/observations/metar/stations/WSAP.TXT';
-var AWC_URL   = 'https://aviationweather.gov/api/data/metar?ids=WSAP&format=json&hours=6';
+var AWC_URL   = 'https://aviationweather.gov/api/data/metar?ids=WSAP&format=json&hours=12';
 var PROXIES   = [
   function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },       // Source 2 — priority
   function(u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); }, // Source 3
@@ -918,7 +918,14 @@ function tryAWC(box, debugLines) {
           }
           if (Array.isArray(json) && json.length > 0 && json[0].icaoId) {
             var reports = json.sort(function(a,b){return b.obsTime-a.obsTime;}).slice(0,3);
-            var raws = reports.map(function(r){ return { raw: r.rawOb||'', receipt: r.receiptTime||null }; });
+            var raws = reports.map(function(r){
+              var rawStr = r.rawOb || '';
+              // If rawOb doesn't start with METAR/SPECI, prepend from metarType field
+              if (rawStr && !rawStr.match(/^(METAR|SPECI)\s/i) && r.metarType) {
+                rawStr = r.metarType.trim() + ' ' + rawStr;
+              }
+              return { raw: rawStr, receipt: r.receiptTime||null };
+            });
             renderMetarRows(box, raws);
           } else {
             debugLines.push('proxy' + idx + ':badshape');
@@ -961,16 +968,17 @@ function showNoData(box, debugLines) {
 function renderMetarRows(box, raws) {
   box.innerHTML = raws.filter(function(r){ return r && r.raw; }).map(function(item) {
     var raw = item.raw;
-    var isSpeci = raw.startsWith('SPECI');
-    var isMETAR = raw.startsWith('METAR');
+    var rawTrimmed = raw.trim();
+    var isSpeci = /^SPECI\s/i.test(rawTrimmed);
+    var isMETAR = /^METAR\s/i.test(rawTrimmed);
     var badge = '';
-    var rest = raw;
+    var rest = rawTrimmed;
     if (isSpeci) {
       badge = '<span class="metar-badge speci-badge">SPECI</span>';
-      rest = raw.slice(5).trim();
+      rest = rawTrimmed.slice(5).trim();
     } else if (isMETAR) {
       badge = '<span class="metar-badge metar-badge-type">METAR</span>';
-      rest = raw.slice(5).trim();
+      rest = rawTrimmed.slice(5).trim();
     }
     var receiptHtml = '';
     if (item.receipt) {
