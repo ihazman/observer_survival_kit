@@ -154,7 +154,7 @@ html, body {
 .qnh-lbl { font-size:.7rem; color:var(--sub); font-weight:500; white-space:nowrap; font-family:var(--sans); }
 .qnh-input {
   background:var(--vbg); border:1.5px solid var(--border2); border-radius:3px;
-  padding:3px 7px; font-family:var(--mono); font-size:.95rem; color:var(--text);
+  padding:3px 7px; font-family:var(--mono); font-size:1.1rem; color:var(--text);
   width:100%; min-height:30px;
 }
 .qnh-input:focus { outline:none; border-color:var(--accent); }
@@ -374,12 +374,12 @@ html, body {
       <div class="qnh-row">
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-att">Att Thermo</label>
-          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="validateAtt(this)" oninput="updClearBtn()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('qnh-baro').focus();}">
+          <input class="qnh-input" id="qnh-att" type="text" inputmode="decimal" placeholder="e.g. 25.0" autocomplete="off" onblur="validateAtt(this)" oninput="updClearBtn();replaceComma(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('qnh-baro').focus();}">
           <span class="qnh-err" id="att-err"></span>
         </div>
         <div class="qnh-field">
           <label class="qnh-lbl" for="qnh-baro">As Read</label>
-          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="validateBaro(this)" oninput="updClearBtn()" onkeydown="if(event.key==='Enter'){event.preventDefault();validateBaro(this);calculateQNH();}">
+          <input class="qnh-input" id="qnh-baro" type="text" inputmode="decimal" placeholder="e.g. 1012.0" autocomplete="off" onblur="validateBaro(this)" oninput="updClearBtn();replaceComma(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();validateBaro(this);calculateQNH();}">
           <span class="qnh-err" id="baro-err"></span>
         </div>
         <div class="qnh-field">
@@ -429,6 +429,7 @@ html, body {
       <div id="notesArea" class="notes-ta" contenteditable="true"
         data-placeholder="Tap to add notes..."
         oninput="onNotesInput()" onblur="onNotesBlur()"
+        onpaste="onNotesPaste(event)"
         style="-webkit-user-select:text;user-select:text;"></div>
     </div>
   </div>
@@ -720,6 +721,14 @@ function toggleMute() {
 }
 
 // ── QNH ───────────────────────────────────────────────────────────
+function replaceComma(el) {
+  if (el.value.indexOf(',') !== -1) {
+    var pos = el.selectionStart;
+    el.value = el.value.replace(/,/g, '.');
+    el.setSelectionRange(pos, pos);
+  }
+}
+
 function fmtInput(el) {
   var v = parseFloat(el.value);
   if (!isNaN(v)) el.value = v.toFixed(1);
@@ -1068,6 +1077,27 @@ function applyMetarUppercase(el) {
     el.innerHTML = newLines.join('<br>');
     setCaretOffset(el, caretPos);
   }
+}
+
+function onNotesPaste(e) {
+  e.preventDefault();
+  // Get plain text only — strips all external formatting, fonts, colours
+  var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  var sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    var range = sel.getRangeAt(0);
+    range.deleteContents();
+    var textNode = document.createTextNode(text);
+    range.insertNode(textNode);
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } else {
+    var el = document.getElementById('notesArea');
+    el.innerHTML += text.replace(/\n/g, '<br>');
+  }
+  onNotesInput();
 }
 
 function onNotesInput() {
