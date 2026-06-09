@@ -213,6 +213,17 @@ html, body {
 .awake-status.off { display:inline; color:var(--sub); }
 .awake-status.no  { display:inline; color:#b35c00; }
 
+.notes-clock {
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--sub);
+  padding: 3px 8px 4px;
+  letter-spacing: .04em;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 5px;
+}
+.notes-clock .st-time  { color: #003366; font-weight: 700; }
+.notes-clock .utc-time { color: #b35c00; font-weight: 700; }
 /* Quick Notes */
 .notes-body { padding: 6px 10px 8px; }
 .notes-ta {
@@ -426,6 +437,7 @@ html, body {
       </div>
     </div>
     <div class="notes-body">
+      <div id="notesClock" class="notes-clock"></div>
       <div id="notesArea" class="notes-ta" contenteditable="true"
         data-placeholder="Tap to add notes..."
         oninput="onNotesInput()" onblur="onNotesBlur()"
@@ -487,7 +499,9 @@ let speechMuted = false;
 window.addEventListener('load', function() {
   buildSel();
   tickDate();
+  tickNotesClock();
   setInterval(tickDate, 15000);
+  setInterval(tickNotesClock, 1000);
   fetchAll();
   startCD();
   // Set initial status to reflect checkbox state on load
@@ -658,10 +672,10 @@ function updStatus(ts) {
     var now = new Date();
     var ageMin = (now - d) / 60000;
     isStale = ageMin > 10;
-    var lt = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' });
+    var lt = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Jakarta' });
     var utcH = String(d.getUTCHours()).padStart(2,'0');
     var utcM = String(d.getUTCMinutes()).padStart(2,'0');
-    timeStr = '<b style="color:#003366;font-size:.95rem;">' + lt + ' LT</b> | <b style="color:#b35c00;font-size:.95rem;">' + utcH + ':' + utcM + ' Z</b>';
+    timeStr = '<b style="color:#003366;font-size:.95rem;">' + lt + ' ST</b> | <b style="color:#b35c00;font-size:.95rem;">' + utcH + ':' + utcM + ' Z</b>';
   }
   var staleHtml = isStale
     ? '&nbsp;<span class="stale-icon">'
@@ -672,7 +686,7 @@ function updStatus(ts) {
       + '</svg> No new data</span>'
     : '';
   document.getElementById('sbox').innerHTML =
-    'Data Timestamp: ' + timeStr + staleHtml;
+    'AWS Data Timestamp: ' + timeStr + staleHtml;
 
   // Colour all readout values red if stale, black if fresh
   var staleColour = isStale ? '#c0392b' : '';
@@ -690,6 +704,21 @@ function updStatus(ts) {
 }
 
 // ── DATE ──────────────────────────────────────────────────────────
+function tickNotesClock() {
+  var el = document.getElementById('notesClock');
+  if (!el) return;
+  var now = new Date();
+  var stDate = now.toLocaleDateString('en-SG', { day:'2-digit', month:'short', timeZone:'Asia/Jakarta' });
+  var stTime = now.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Jakarta' });
+  var dd   = String(now.getUTCDate()).padStart(2,'0');
+  var mon  = now.toLocaleDateString('en-SG', { month:'short', timeZone:'UTC' });
+  var utcT = String(now.getUTCHours()).padStart(2,'0') + ':' + String(now.getUTCMinutes()).padStart(2,'0');
+  el.innerHTML =
+    '<span class="st-time">' + stDate + ', ' + stTime + ' ST</span>' +
+    ' | ' +
+    '<span class="utc-time">' + dd + ' ' + mon + ', ' + utcT + ' Z</span>';
+}
+
 function tickDate() {
   document.getElementById('dstr').textContent = new Date().toLocaleDateString('en-SG', {
     weekday:'short', month:'short', day:'numeric', year:'numeric', timeZone:'Asia/Singapore'
@@ -996,7 +1025,7 @@ function renderMetarRows(box, raws) {
     if (item.receipt) {
       var d = new Date(item.receipt);
       var utc = d.getUTCHours().toString().padStart(2,'0') + ':' + d.getUTCMinutes().toString().padStart(2,'0') + ' Z';
-      var lt  = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Singapore' }) + ' LT';
+      var lt  = d.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Jakarta' }) + ' ST';
       receiptHtml = '<div class="metar-receipt">Received: ' + lt + ' | ' + utc + '</div>';
     }
     return '<div class="metar-row">' + badge + escHtml(rest) + receiptHtml + '</div>';
