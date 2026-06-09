@@ -598,6 +598,18 @@ function renderAll() {
   sv('v-wspd', WS !== undefined ? Math.round(WS).toString().padStart(2,'0') : null);
   sv('v-rain', RF !== undefined ? RF.toFixed(1) : null);
 
+  // Highlight rainfall box cyan if > 0
+  var rainBox = document.getElementById('wrap-rain');
+  if (rainBox) {
+    if (RF !== undefined && RF > 0) {
+      rainBox.style.background = 'cyan';
+      rainBox.style.borderColor = '#00aaaa';
+    } else {
+      rainBox.style.background = '';
+      rainBox.style.borderColor = '';
+    }
+  }
+
   if (RF !== undefined) announceRain(RF, st.rainfall_ts);
 
   if (T !== undefined && RH !== undefined) {
