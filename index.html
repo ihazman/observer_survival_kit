@@ -1230,10 +1230,20 @@ function ph(s) { return '<span class="metar-placeholder-tag">' + s + '</span>'; 
 function buildReportTemplate(type, strUTC) {
   var wdirEl = document.getElementById('v-wdir');
   var wspdEl = document.getElementById('v-wspd');
-  var wdir = wdirEl ? wdirEl.textContent.trim() : '';
-  var wspd = wspdEl ? wspdEl.textContent.trim() : '';
+  var wdir = wdirEl ? wdirEl.textContent.trim() : '000';
+  var wspd = wspdEl ? wspdEl.textContent.trim() : '00';
   var wspdNum = parseInt(wspd) || 0;
-  var strWindGRP = wspdNum === 0 ? '00000' : (wdir.padStart(3,'0') + wspd.padStart(2,'0'));
+  var wdirNum = parseInt(wdir) || 0;
+  var strWindGRP;
+  if (wspdNum === 0) {
+    wdir = '000';
+    strWindGRP = wdir + wspd.padStart(2,'0');
+  } else if (wdirNum === 0 && wspdNum > 0) {
+    wdir = '360';
+    strWindGRP = wdir + wspd.padStart(2,'0');
+  } else {
+    strWindGRP = wdir.padStart(3,'0') + wspd.padStart(2,'0');
+  }
 
   var tempEl = document.getElementById('v-temp');
   var tempVal = tempEl ? parseFloat(tempEl.textContent) : NaN;
