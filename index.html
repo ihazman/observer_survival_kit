@@ -1224,6 +1224,12 @@ function clearNotes() {
   var el = document.getElementById('notesArea');
   el.innerHTML = '';
   updNotesButtons();
+  // Resume auto fetch
+  var chk = document.getElementById('autoChk');
+  if (chk && !chk.checked) {
+    chk.checked = true;
+    toggleAuto();
+  }
 }
 
 // ── METAR TEMPLATE INSERT ─────────────────────────────────────────
@@ -1291,8 +1297,16 @@ function buildSpeciTemplate() {
   return buildReportTemplate('SPECI', strUTC);
 }
 
-function insertMetarTemplate() { if (!notesLocked) insertTemplate(buildMetarTemplate()); }
-function insertSpeciTemplate()  { if (!notesLocked) insertTemplate(buildSpeciTemplate()); }
+function insertMetarTemplate() { if (!notesLocked) { pauseAutoFetch(); insertTemplate(buildMetarTemplate()); } }
+function insertSpeciTemplate()  { if (!notesLocked) { pauseAutoFetch(); insertTemplate(buildSpeciTemplate()); } }
+
+function pauseAutoFetch() {
+  var chk = document.getElementById('autoChk');
+  if (chk && chk.checked) {
+    chk.checked = false;
+    toggleAuto();
+  }
+}
 
 function insertTemplate(tplHtml) {
   var el = document.getElementById('notesArea');
