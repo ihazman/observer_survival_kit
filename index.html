@@ -508,18 +508,21 @@ window.addEventListener('load', function() {
   setInterval(tickNotesClock, 1000);
   fetchAll();
   startCD();
-  // Set initial status to reflect checkbox state on load
+  // Set initial status
   if (wakeSupported) {
-    setAwakeStatus('on', 'is ON');
+    setAwakeStatus('off', 'Tap screen to activate');
   } else {
     document.getElementById('chkAwake').checked = false;
     setAwakeStatus('no', 'Not supported on this device');
   }
-  // Request wake lock on first user touch/click (required by browsers)
-  document.addEventListener('click', function initWakeLock() {
+  // Request wake lock on first user gesture (click or touch)
+  function initWakeLock() {
     document.removeEventListener('click', initWakeLock);
-    if (document.getElementById('chkAwake').checked) toggleAwake();
-  }, { once: true });
+    document.removeEventListener('touchend', initWakeLock);
+    if (document.getElementById('chkAwake').checked && wakeSupported) toggleAwake();
+  }
+  document.addEventListener('click', initWakeLock);
+  document.addEventListener('touchend', initWakeLock);
 });
 
 function buildSel() {
