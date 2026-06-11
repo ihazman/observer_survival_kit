@@ -759,7 +759,18 @@ function announceRain(rf, ts) {
   var box = document.getElementById('wrap-rain');
   if (box) {
     box.style.borderColor = '#003366'; box.style.background = '#e8eef4';
-    setTimeout(function() { box.style.borderColor = ''; box.style.background = ''; }, 2500);
+    setTimeout(function() {
+      // Restore cyan if rainfall is still > 0, else clear
+      var st = allStn[selStn] || {};
+      var rf = st.rainfall;
+      if (rf !== undefined && rf > 0) {
+        box.style.background = 'cyan';
+        box.style.borderColor = '#00aaaa';
+      } else {
+        box.style.background = '';
+        box.style.borderColor = '';
+      }
+    }, 2500);
   }
 }
 function toggleMute() {
