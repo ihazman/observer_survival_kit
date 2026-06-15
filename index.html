@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Observer Survival Kit</title>
+<title>Observer Field Kit</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
 
@@ -437,7 +437,14 @@ html, body {
       </div>
     </div>
     <div class="notes-body">
-      <div id="notesClock" class="notes-clock"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:5px;padding-bottom:2px;">
+        <div id="notesClock" class="notes-clock" style="border-bottom:none;margin-bottom:0;padding-bottom:0;flex:1;"></div>
+        <button onclick="opsForm()" title="Copy report and open Ops Form"
+          style="background:#000050;border:1px solid rgba(255,255,255,0.3);border-radius:4px;color:#fff;padding:3px 9px;cursor:pointer;font-family:var(--sans);font-size:.72rem;font-weight:600;white-space:nowrap;min-height:26px;flex-shrink:0;margin-left:8px;touch-action:manipulation;display:inline-flex;align-items:center;gap:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Ops Form
+        </button>
+      </div>
       <div id="notesArea" class="notes-ta" contenteditable="true"
         data-placeholder="Tap to add notes..."
         oninput="onNotesInput()" onblur="onNotesBlur()"
@@ -1144,6 +1151,33 @@ function applyMetarUppercase(el) {
     el.innerHTML = newLines.join('<br>');
     setCaretOffset(el, caretPos);
   }
+}
+
+// ── OPS FORM ──────────────────────────────────────────────────────
+function opsForm() {
+  var el = document.getElementById('notesArea');
+  var text = el ? (el.innerText || el.textContent || '') : '';
+  // Extract first METAR or SPECI line up to and including '='
+  var match = text.match(/(METAR|SPECI)[\s\S]*?=/);
+  var report = match ? match[0].trim() : '';
+  if (report) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(report).catch(function() { fallbackCopy(report); });
+    } else {
+      fallbackCopy(report);
+    }
+  }
+  window.open('https://go.gov.sg/metstations', '_blank');
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
 }
 
 function onNotesPaste(e) {
